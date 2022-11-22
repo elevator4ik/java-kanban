@@ -1,35 +1,84 @@
 import manager.Manager;
+import modul.Epic;
+import modul.SubTask;
+import modul.Task;
 
-//раскидал по пакам классы для удобства
 public class Main {
-    //в соответствии с ТЗ, в мэйне только заглушки для проверки работоспособности остального кода
+
     public static void main(String[] args) {
 
         Manager manager = new Manager();
+        SubTask subTask;
+        Task task;
+        Epic epic;
 
-        manager.createTask("First", "First one task");
-        manager.createTask("Second", "Second one task");
-        manager.createEpic("First", "First one Epic");
-        manager.updateSubTask("under_first", "first of First", "NEW", 2);
-        manager.updateSubTask("under_first", "second of First", "NEW", 3);
-        manager.createEpic("Second", "Second oneEpic");
-        manager.updateSubTask("under_second", "first of Second", "NEW", 8);
+        task = new Task("First", "First one task", "NEW");
+        task.setTaskId(manager.newId());
+
+        manager.addTask(task);
+
+        task = new Task("Second", "Second one task", "NEW");
+        task.setTaskId(manager.newId());
+
+        manager.addTask(task);
+
+        epic = new Epic("First_Epic", "First one Epic", "NEW");
+        epic.setTaskId(manager.newId());
+
+        manager.addEpic(epic);
+
+        subTask = new SubTask("under_first", "first of First", "NEW", 2);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
+        subTask = new SubTask("under_first", "second of First", "NEW", 4);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
+        epic = new Epic("Second_Epic", "Second oneEpic", "NEW");
+        epic.setTaskId(manager.newId());
+
+        manager.addEpic(epic);
+
+        subTask = new SubTask("under_second", "first of Second", "NEW", 8);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
         System.out.println("эпики \n" + manager.getEpicList() + "\n" +
                 "Сабтаски  \n" + manager.getSubTaskList() + "\n" +
-                "Таски \n" + manager.getTaskList());
-        manager.updateSubTask("under_first", "first of First", "DONE", 5);
-        manager.updateSubTask("under_first", "second of First", "DONE", 11);
-        manager.updateSubTask("under_second", "first of Second", "IN_PROGRESS", 9);
-        manager.updateTask("IN_PROGRESS", 0);
+                "Таски \n" + manager.getTaskList() + "\n");
+
+        subTask = new SubTask("under_first", "first of First", "DONE", 6);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
+        subTask = new SubTask("under_first", "second of First", "IN_PROGRESS", 12);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
+        subTask = new SubTask("under_second", "first of Second", "DONE", 10);
+        subTask.setTaskId(manager.newId());
+
+        manager.updateSubTask(subTask);
+
+        task = new Task("First", "First one task", "IN_PROGRESS");
+        task.setTaskId(0);
+
+        manager.addTask(task);
         System.out.println("эпики \n" + manager.getEpicList() + "\n" +
                 "Сабтаски  \n" + manager.getSubTaskList() + "\n" +
-                "Таски \n" + manager.getTaskList());
+                "Таски \n" + manager.getTaskList() + "\n");
         manager.deleteTaskById(0);
-        manager.deleteSubTaskById(18);
-        manager.deleteEpicById(14);
+        manager.deleteSubTaskById(16);
+        manager.deleteEpicById(18);
         System.out.println("эпики \n" + manager.getEpicList() + "\n" +
                 "Сабтаски  \n" + manager.getSubTaskList() + "\n" +
-                "Таски \n" + manager.getTaskList());
+                "Таски \n" + manager.getTaskList() + "\n");
         manager.deleteEpicList();
         manager.deleteTaskList();
         manager.deleteSubTaskList();
