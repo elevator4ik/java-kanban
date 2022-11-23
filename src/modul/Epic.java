@@ -1,26 +1,21 @@
 package modul;
 
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public class Epic extends Task {
 
-    protected HashMap<Integer, String> subTasks = new HashMap<>();// хранение реализовано через мапу, т.к. при хранении
-    // в списке нет возможности задать id как идентификатор. Поиск в списке возможен по индексу или элементу(.get(int index)
-    // и .get(Object obj)). Если индекс и объект имеет схожий тип (в этом случае целочисленный), то поиск происходит
-    // по индексу(доказано опытным путем). Можно использовать сначала поиск индекса по элементу (.indexOf(Object obj)),
-    // а потом по полученному индексу цеплять элемент, но это громоздко и увеличивает шанс словить баг или ошибку.
-    // Исходя из вышесказанного принято решение использовать мапу.
+    protected ArrayList<Integer> subTasks;
 
     public Epic(String name, String description, String status) {
         super(name, description, status);
     }
 
-    public HashMap<Integer, String> getSubTasks() {
+    public ArrayList<Integer> getSubTasks() {
 
         return subTasks;
     }
 
-    public void setSubTasks(HashMap<Integer, String> i) {
+    public void setSubTasks(ArrayList<Integer> i) {
 
         this.subTasks = i;
     }
