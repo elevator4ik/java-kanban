@@ -13,7 +13,7 @@ public class Manager {
     HashMap<Integer, Epic> epicList = new HashMap<>();
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
-    int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id
+    private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id
 
     private int newId() {//метод увеличения счетчика
 
@@ -49,7 +49,6 @@ public class Manager {
 
         if (taskList.containsKey(task.getTaskId())) {
 
-            taskList.remove(task.getTaskId());
             taskList.put(task.getTaskId(), task);
         }
     }
@@ -58,7 +57,7 @@ public class Manager {
     public void updateSubTask(SubTask subTask) {//обновление сабтаска соправождается обновлением эпика
 
         String status;
-        Epic epic = epicList.get(subTask.getEpicId());
+        Epic epic = getEpicById(subTask.getEpicId());
         ArrayList<Integer> subTasks = epic.getSubTasks();
         if (subTasks != null) {
             if (subTasks.contains(subTask.getTaskId())) {//проверяем, есть ли в сабтасках эпика уже такой сабтаск
@@ -85,8 +84,8 @@ public class Manager {
     public void deleteSubTaskById(int i) {//удаление по id из мапы, принцип тот же, что и при добавлении
 
         String status;
-        SubTask subTask = subTaskList.get(i);
-        Epic epic = epicList.get(subTask.getEpicId());
+        SubTask subTask = getSubTaskById(i);
+        Epic epic = getEpicById(subTask.getEpicId());
         ArrayList<Integer> subTasks = epic.getSubTasks();
 
         if (subTasks != null) {
@@ -100,7 +99,7 @@ public class Manager {
         }
     }
 
-    public void putNewSubTask(SubTask subTask, ArrayList<Integer> subTasks) {// добавляем сабтаск в общую мапу и в
+    private void putNewSubTask(SubTask subTask, ArrayList<Integer> subTasks) {// добавляем сабтаск в общую мапу и в
         // список сабтасков эпика
 
         subTasks.add(subTask.getTaskId());
@@ -108,33 +107,42 @@ public class Manager {
         subTaskList.put(subTask.getTaskId(), subTask);
     }
 
-    public void rewriteEpic(Epic epic, ArrayList<Integer> subTasks, String statusNew) { //переписываем эпик
+    private void rewriteEpic(Epic epic, ArrayList<Integer> subTasks, String statusNew) { //переписываем эпик
 
         epic.setStatus(statusNew);
         epic.setSubTasks(subTasks);
-        epicList.remove(epic.getTaskId());
         epicList.put(epic.getTaskId(), epic);
     }
 
-    public String checkStatus(ArrayList<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
+    private String checkStatus(ArrayList<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
 
-        String status = "";
+        String status;
+        int statNew = 0;//каунтеры для сабтасков с опреденными статусами
+        int statDone = 0;
 
         if (!subTasks.isEmpty()) {
             for (int i : subTasks) {
 
-                SubTask subTask = subTaskList.get(i);
+                SubTask subTask = getSubTaskById(i);
+                String subStatus = subTask.getStatus();
 
-                if (subTask.getStatus().equals("IN_PROGRESS")) {//если хоть 1 сабтаск в процессе - эпик в процессе
+                if (subStatus.equals("DONE")) {//считаем все DONE
 
-                    status = "IN_PROGRESS";
-                } else if (subTask.getStatus().equals("DONE") && !status.equals("IN_PROGRESS")) {//если все сабтаски
-                    // вернут done - эпик будет выполнен
+                    statDone++;
+                } else if (subStatus.equals("NEW")) {//считаем все NEW
 
-                    status = "DONE";
-                } else {//tесли все сабтаски со статусом NEW, то и эпик NEW
-                    status = "NEW";
+                    statNew++;
                 }
+            }
+            if (statDone == subTasks.size()) {
+
+                status = "DONE";
+            } else if (statNew == subTasks.size()) {
+
+                status = "NEW";
+            } else {//каунтер и проверки на IN_PROGRESS излишни
+
+                status = "IN_PROGRESS";
             }
         } else {// если сабтаски отсутствуют у эпика - статус меняется на NEW
 
@@ -155,15 +163,17 @@ public class Manager {
     }
 
     public void deleteSubTaskList() {//удаление целиком мапы
+        // Комментарий услышан, но есть возражение: зачем создавать целую новую мапу и пускать лишний цикл, если мы
+        // удаляем совсем все сабтаски? Раз нет сабтасков то и все эпики должны быть NEW. Я считаю, что тут мы избегаем
+        // избыточных действий и бесполезной загрузки памяти, но проверку на null добавил. В контексте данной программы,
+        // это конечно смешно звучит, но в контексте реальных задач может ускорить быстродействие
 
         subTaskList.clear();
 
         for (int i : epicList.keySet()) {//идем по id эпиков и меняем статус на NEW
             Epic epic = epicList.get(i);
-            if (!epic.getStatus().equals("DONE")) {//но только если эпик еще не завершен
-                String status = "NEW";
-                rewriteEpic(epic, null, status);//вместо списка сабтасков - null, как будто только объявили эпик
-            }
+            if (epic == null) continue;
+            rewriteEpic(epic, null, "NEW");//вместо списка сабтасков - null, как будто только объявили эпик
         }
     }
 
@@ -206,6 +216,36 @@ public class Manager {
         Collection<Epic> values = epicList.values();
         ArrayList<Epic> list;
         list = new ArrayList<>(values);
+
+        return list;
+    }
+
+    public SubTask getSubTaskById(int i) {//сабтаск по id
+
+        return subTaskList.get(i);
+    }
+
+    public Task getTaskById(int i) {//таск по id,  не используется, но нужен по ТЗ
+
+        return taskList.get(i);
+    }
+
+    public Epic getEpicById(int i) {//эпик по id
+
+        return epicList.get(i);
+    }
+
+    private ArrayList<SubTask> getEpicSubTasks(int i) {//список сабтасков эпика, не используется, но нужен по ТЗ
+
+        Epic epic = getEpicById(i);
+        ArrayList<Integer> subTasks = epic.getSubTasks();
+        ArrayList<SubTask> list = new ArrayList<>();
+
+        for (int j : subTasks) {//пишем все сабтаски в список, который возвращается методом
+
+            SubTask subTask = getSubTaskById(j);
+            list.add(subTask);
+        }
 
         return list;
     }
