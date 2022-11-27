@@ -6,7 +6,7 @@ public class Epic extends Task {
 
     protected ArrayList<Integer> subTasks;
 
-    public Epic(String name, String description, String status) {
+    public Epic(String name, String description, Status status) {
         super(name, description, status);
     }
 
@@ -38,7 +38,7 @@ public class Epic extends Task {
 
             printSubTasks = "null";
         }
-        return result + printSubTasks + "}";
+        return result + printSubTasks + "}\n";
     }
 
 }

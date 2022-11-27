@@ -1,6 +1,7 @@
 package manager;
 
 import modul.Epic;
+import modul.Status;
 import modul.SubTask;
 import modul.Task;
 
@@ -8,12 +9,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-public class Manager {
+
+public class InMemoryTaskManager implements TaskManager {
 
     HashMap<Integer, Epic> epicList = new HashMap<>();
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
-    private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id
+    private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
+
 
     private int newId() {//метод увеличения счетчика
 
@@ -23,6 +26,7 @@ public class Manager {
         return newId;
     }
 
+    @Override
     public void addEpic(Epic epic) {//добавляем полученному из вне эпику id и пишем в мапу
 
         epic.setTaskId(newId());
@@ -30,6 +34,7 @@ public class Manager {
         epicList.put(epic.getTaskId(), epic);
     }
 
+    @Override
     public void addTask(Task task) {// то же что и эпик
 
         task.setTaskId(newId());
@@ -38,6 +43,7 @@ public class Manager {
 
     }
 
+    @Override
     public void addSubTask(SubTask subTask) {// то же что и эпик, только пишем еще и в эпик
 
         subTask.setTaskId(newId());
@@ -45,7 +51,9 @@ public class Manager {
         updateSubTask(subTask);
     }
 
+    @Override
     public void updateTask(Task task) {//обновляем таск
+
 
         if (taskList.containsKey(task.getTaskId())) {
 
@@ -53,10 +61,10 @@ public class Manager {
         }
     }
 
-
+    @Override
     public void updateSubTask(SubTask subTask) {//обновление сабтаска соправождается обновлением эпика
 
-        String status;
+        Status status;
         Epic epic = getEpicById(subTask.getEpicId());
         ArrayList<Integer> subTasks = epic.getSubTasks();
         if (subTasks != null) {
@@ -65,7 +73,7 @@ public class Manager {
             }
             putNewSubTask(subTask, subTasks);
 
-            status = checkStatus(subTasks);
+            status = Status.valueOf(checkStatus(subTasks));
 
             rewriteEpic(epic, subTasks, status);
 
@@ -81,9 +89,10 @@ public class Manager {
         }
     }
 
-    public void deleteSubTaskById(int i) {//удаление по id из мапы, принцип тот же, что и при добавлении
+    @Override
+    public void deleteSubTaskById(int i) {//удаление по id из мапы, принцип тот же, что и при добавлении.
 
-        String status;
+        Status status;
         SubTask subTask = getSubTaskById(i);
         Epic epic = getEpicById(subTask.getEpicId());
         ArrayList<Integer> subTasks = epic.getSubTasks();
@@ -93,7 +102,7 @@ public class Manager {
             subTaskList.remove(i);
             subTasks.remove((Integer) i);
 
-            status = checkStatus(subTasks);
+            status = Status.valueOf(checkStatus(subTasks));
 
             rewriteEpic(epic, subTasks, status);
         }
@@ -107,7 +116,7 @@ public class Manager {
         subTaskList.put(subTask.getTaskId(), subTask);
     }
 
-    private void rewriteEpic(Epic epic, ArrayList<Integer> subTasks, String statusNew) { //переписываем эпик
+    private void rewriteEpic(Epic epic, ArrayList<Integer> subTasks, Status statusNew) { //переписываем эпик
 
         epic.setStatus(statusNew);
         epic.setSubTasks(subTasks);
@@ -124,12 +133,12 @@ public class Manager {
             for (int i : subTasks) {
 
                 SubTask subTask = getSubTaskById(i);
-                String subStatus = subTask.getStatus();
+                Status subStatus = subTask.getStatus();
 
-                if (subStatus.equals("DONE")) {//считаем все DONE
+                if (subStatus == Status.DONE) {//считаем все DONE
 
                     statDone++;
-                } else if (subStatus.equals("NEW")) {//считаем все NEW
+                } else if (subStatus == Status.NEW) {//считаем все NEW
 
                     statNew++;
                 }
@@ -144,40 +153,44 @@ public class Manager {
 
                 status = "IN_PROGRESS";
             }
-        } else {// если сабтаски отсутствуют у эпика - статус меняется на NEW
+        } else {// если сабтаски отсутствуют у эпика — статус меняется на NEW
 
             status = "NEW";
         }
         return status;
     }
 
+    @Override
     public void deleteEpicList() {//удаление целиком мапы
 
         epicList.clear();
-        subTaskList.clear();//если удаляем все эпики, то и сабтаски с ними, проверять статусы не у чего
+        subTaskList.clear();//если удаляем все эпики, то и сабтаски с ними, проверять статусы не у чего.
     }
 
+    @Override
     public void deleteTaskList() {//удаление целиком мапы
 
         taskList.clear();
     }
 
-    public void deleteSubTaskList() {//удаление целиком мапы
+    @Override
+    public void deleteSubTaskList() {//Удаление целиком мапы
         // Комментарий услышан, но есть возражение: зачем создавать целую новую мапу и пускать лишний цикл, если мы
         // удаляем совсем все сабтаски? Раз нет сабтасков то и все эпики должны быть NEW. Я считаю, что тут мы избегаем
         // избыточных действий и бесполезной загрузки памяти, но проверку на null добавил. В контексте данной программы,
-        // это конечно смешно звучит, но в контексте реальных задач может ускорить быстродействие
+        // это конечно смешно звучит, но в контексте реальных задач может ускорить быстродействие.
 
         subTaskList.clear();
 
         for (int i : epicList.keySet()) {//идем по id эпиков и меняем статус на NEW
             Epic epic = epicList.get(i);
             if (epic == null) continue;
-            rewriteEpic(epic, null, "NEW");//вместо списка сабтасков - null, как будто только объявили эпик
+            rewriteEpic(epic, null, Status.NEW);//вместо списка сабтасков - null, как будто только объявили эпик
         }
     }
 
-    public void deleteEpicById(int i) {//удаление эпика по id из мапы и всех сабтасков к нему относящихся
+    @Override
+    public void deleteEpicById(int i) {//удаление эпика по id из мапы и всех сабтасков к нему относящихся.
 
         Epic epic = epicList.get(i);
         ArrayList<Integer> subTasks = epic.getSubTasks();
@@ -188,11 +201,13 @@ public class Manager {
         epicList.remove(i);
     }
 
+    @Override
     public void deleteTaskById(int i) {//удаление таска по id из мапы
 
         taskList.remove(i);
     }
 
+    @Override
     public ArrayList<SubTask> getSubTaskList() {//вывод списка сабтасков
 
         Collection<SubTask> values = subTaskList.values();
@@ -202,6 +217,7 @@ public class Manager {
         return list;
     }
 
+    @Override
     public ArrayList<Task> getTaskList() {//выводим все таски
 
         Collection<Task> values = taskList.values();
@@ -211,6 +227,7 @@ public class Manager {
         return list;
     }
 
+    @Override
     public ArrayList<Epic> getEpicList() {//получение списка эпиков
 
         Collection<Epic> values = epicList.values();
@@ -220,16 +237,19 @@ public class Manager {
         return list;
     }
 
+    @Override
     public SubTask getSubTaskById(int i) {//сабтаск по id
 
         return subTaskList.get(i);
     }
 
-    public Task getTaskById(int i) {//таск по id,  не используется, но нужен по ТЗ
+    @Override
+    public Task getTaskById(int i) {//таск по id
 
         return taskList.get(i);
     }
 
+    @Override
     public Epic getEpicById(int i) {//эпик по id
 
         return epicList.get(i);
