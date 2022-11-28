@@ -1,21 +1,21 @@
 package modul;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public class Epic extends Task {
 
-    protected ArrayList<Integer> subTasks;
+    protected List<Integer> subTasks;
 
     public Epic(String name, String description, Status status) {
         super(name, description, status);
     }
 
-    public ArrayList<Integer> getSubTasks() {
+    public List<Integer> getSubTasks() {
 
         return subTasks;
     }
 
-    public void setSubTasks(ArrayList<Integer> i) {
+    public void setSubTasks(List<Integer> i) {
 
         this.subTasks = i;
     }

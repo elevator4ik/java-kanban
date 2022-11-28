@@ -1,10 +1,11 @@
 package manager;
 
 import modul.Epic;
+import modul.Status;
 import modul.SubTask;
 import modul.Task;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface TaskManager {
 
@@ -30,11 +31,11 @@ public interface TaskManager {
 
     void deleteTaskById(int i);
 
-    ArrayList<SubTask> getSubTaskList();
+    List<SubTask> getSubTaskList();
 
-    ArrayList<Task> getTaskList();
+    List<Task> getTaskList();
 
-    ArrayList<Epic> getEpicList();
+    List<Epic> getEpicList();
 
     SubTask getSubTaskById(int i);
 
@@ -42,4 +43,10 @@ public interface TaskManager {
 
     Epic getEpicById(int i);
 
+    List<SubTask> getEpicSubTasks(int i);
+
+    List<Task> getHistory();
+
+    void updateEpic(Epic epic, List<Integer> subTasks, Status statusNew);//переименован из rewriteEpic, раз должен быть именно метод апдейта эпика, хотя явно его апдейтить
+    // нельзя, только при работе с сабтасками
 }
