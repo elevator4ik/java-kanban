@@ -7,10 +7,7 @@ import manager.TaskManager;
 
 public class Managers {
 
-    public TaskManager taskManager = getDefault();// работа таскменеджера происходит через менеджера
-
-    //методы getDefault() и getDefaultHistory() были изначально реализованы, теперь тут только они.
-    public TaskManager getDefault() {
+    public static TaskManager getDefault() {
 
         return new InMemoryTaskManager();
     }

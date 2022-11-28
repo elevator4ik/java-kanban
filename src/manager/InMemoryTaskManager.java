@@ -19,6 +19,8 @@ public class InMemoryTaskManager implements TaskManager {
     HashMap<Integer, Epic> epicList = new HashMap<>();
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
+    Status status;
+    List<Integer> subTasks;
     private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
 
 
@@ -36,7 +38,6 @@ public class InMemoryTaskManager implements TaskManager {
         epic.setTaskId(newId());
 
         epicList.put(epic.getTaskId(), epic);
-        historyManager.add(epic);
     }
 
     @Override
@@ -45,7 +46,6 @@ public class InMemoryTaskManager implements TaskManager {
         task.setTaskId(newId());
 
         taskList.put(task.getTaskId(), task);
-        historyManager.add(task);
     }
 
     @Override
@@ -63,30 +63,24 @@ public class InMemoryTaskManager implements TaskManager {
         if (taskList.containsKey(task.getTaskId())) {
 
             taskList.put(task.getTaskId(), task);
-            historyManager.add(task);
         }
     }
 
     @Override
     public void updateSubTask(SubTask subTask) {//обновление сабтаска соправождается обновлением эпика
 
-        Status status;
         Epic epic = getEpicById(subTask.getEpicId());
-        List<Integer> subTasks = epic.getSubTasks();
+        subTasks = epic.getSubTasks();
 
-        historyManager.add(epic);//не могу дочухать сам: стоит ли оставить просмотр эпика в очереди первым или же
-        // лучше сначала записать просмотр сабтаска? По сути, логично же, что сначала открывают эпик, а потом уже в него
-        // добавляют сабтаск?
-        historyManager.add(subTask);
         if (subTasks != null) {
             if (subTasks.contains(subTask.getTaskId())) {//проверяем, есть ли в сабтасках эпика уже такой сабтаск
                 subTasks.remove((Integer) subTask.getTaskId());//удаляем, чтобы не было дублей
             }
             putNewSubTask(subTask, subTasks);
 
-            status = Status.valueOf(checkStatus(subTasks));
+            status = checkStatus(subTasks);
 
-            updateEpic(epic, subTasks, status);
+            rewriteEpic(epic, subTasks, status);
 
         } else {
 
@@ -96,7 +90,7 @@ public class InMemoryTaskManager implements TaskManager {
 
             status = subTask.getStatus();
 
-            updateEpic(epic, subTasks, status);
+            rewriteEpic(epic, subTasks, status);
         }
 
     }
@@ -104,22 +98,18 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteSubTaskById(int i) {//удаление по id из мапы, принцип тот же, что и при добавлении.
 
-        Status status;
         SubTask subTask = getSubTaskById(i);
         Epic epic = getEpicById(subTask.getEpicId());
-        List<Integer> subTasks = epic.getSubTasks();
-
-        historyManager.add(epic);
-        historyManager.add(subTask);//при удалении так же смотрим задачи, поэтому записываем их в историю.
+        subTasks = epic.getSubTasks();
 
         if (subTasks != null) {
 
             subTaskList.remove(i);
             subTasks.remove((Integer) i);
 
-            status = Status.valueOf(checkStatus(subTasks));
+            status = checkStatus(subTasks);
 
-            updateEpic(epic, subTasks, status);
+            rewriteEpic(epic, subTasks, status);
         }
     }
 
@@ -132,17 +122,20 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void updateEpic(Epic epic, List<Integer> subTasks, Status statusNew) { //переписываем эпик, НО тут не
-        // записываем просмотр эпика, т.к. всегда перед вызовом этого метода он просматривается заранее.
+    public void updateEpic(Epic epic) {
+        List<Integer> thisSubTasks = epic.getSubTasks();
+        rewriteEpic(epic, thisSubTasks, checkStatus(thisSubTasks));
+    }
 
+    public void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {
         epic.setStatus(statusNew);
         epic.setSubTasks(subTasks);
         epicList.put(epic.getTaskId(), epic);
     }
 
-    private String checkStatus(List<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
+    private Status checkStatus(List<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
 
-        String status;
+
         int statNew = 0;//каунтеры для сабтасков с опреденными статусами
         int statDone = 0;
 
@@ -162,17 +155,17 @@ public class InMemoryTaskManager implements TaskManager {
             }
             if (statDone == subTasks.size()) {
 
-                status = "DONE";
+                status = Status.DONE;
             } else if (statNew == subTasks.size()) {
 
-                status = "NEW";
+                status = Status.NEW;
             } else {//каунтер и проверки на IN_PROGRESS излишни
 
-                status = "IN_PROGRESS";
+                status = Status.IN_PROGRESS;
             }
         } else {// если сабтаски отсутствуют у эпика — статус меняется на NEW
 
-            status = "NEW";
+            status = Status.NEW;
         }
         return status;
     }
@@ -202,7 +195,7 @@ public class InMemoryTaskManager implements TaskManager {
         for (int i : epicList.keySet()) {//идем по id эпиков и меняем статус на NEW
             Epic epic = epicList.get(i);
             if (epic == null) continue;
-            updateEpic(epic, null, Status.NEW);//вместо списка сабтасков - null, как будто только объявили эпик
+            rewriteEpic(epic, null, Status.NEW);//вместо списка сабтасков - null, как будто только объявили эпик
         }
     }
 
@@ -210,7 +203,6 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteEpicById(int i) {//удаление эпика по id из мапы и всех сабтасков к нему относящихся.
 
         Epic epic = epicList.get(i);
-        historyManager.add(epic);
 
         List<Integer> subTasks = epic.getSubTasks();
         for (int j : subTasks) {//ищем все сабтаски эпика и удаляем их
@@ -223,36 +215,34 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public void deleteTaskById(int i) {//удаление таска по id из мапы
 
-        Task task = taskList.get(i);//достаем, чтобы записать в историю просмотров
-        historyManager.add(task);
         taskList.remove(i);
     }
 
     @Override
-    public ArrayList<SubTask> getSubTaskList() {//вывод списка сабтасков
+    public List<SubTask> getSubTaskList() {//вывод списка сабтасков
 
         Collection<SubTask> values = subTaskList.values();
-        ArrayList<SubTask> list;
+        List<SubTask> list;
         list = new ArrayList<>(values);
 
         return list;
     }
 
     @Override
-    public ArrayList<Task> getTaskList() {//выводим все таски
+    public List<Task> getTaskList() {//выводим все таски
 
         Collection<Task> values = taskList.values();
-        ArrayList<Task> list;
+        List<Task> list;
         list = new ArrayList<>(values);
 
         return list;
     }
 
     @Override
-    public ArrayList<Epic> getEpicList() {//получение списка эпиков
+    public List<Epic> getEpicList() {//получение списка эпиков
 
         Collection<Epic> values = epicList.values();
-        ArrayList<Epic> list;
+        List<Epic> list;
         list = new ArrayList<>(values);
 
         return list;
@@ -261,19 +251,32 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int i) {//сабтаск по id
 
-        return subTaskList.get(i);
+        SubTask subTask = subTaskList.get(i);
+
+        historyManager.add(subTask);
+
+        return subTask;
+
     }
 
     @Override
     public Task getTaskById(int i) {//таск по id
 
-        return taskList.get(i);
+        Task task = taskList.get(i);
+
+        historyManager.add(task);
+
+        return task;
     }
 
     @Override
     public Epic getEpicById(int i) {//эпик по id
 
-        return epicList.get(i);
+Epic epic = epicList.get(i);
+
+        historyManager.add(epic);
+
+        return epic;
     }
 
     @Override

@@ -1,7 +1,6 @@
 package manager;
 
 import modul.Epic;
-import modul.Status;
 import modul.SubTask;
 import modul.Task;
 
@@ -47,6 +46,5 @@ public interface TaskManager {
 
     List<Task> getHistory();
 
-    void updateEpic(Epic epic, List<Integer> subTasks, Status statusNew);//переименован из rewriteEpic, раз должен быть именно метод апдейта эпика, хотя явно его апдейтить
-    // нельзя, только при работе с сабтасками
+    void updateEpic(Epic epic);
 }
