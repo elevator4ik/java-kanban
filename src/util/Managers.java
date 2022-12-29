@@ -12,8 +12,7 @@ public class Managers {
         return new InMemoryTaskManager();
     }
 
-    public static InMemoryHistoryManager getDefaultHistory() {// в соответствии с ТЗ метод статичный, чтоюы вызвать
-        // его в таскменеджере и там хранить хисторименеджера
+    public static InMemoryHistoryManager getDefaultHistory() {
 
         return new InMemoryHistoryManager();
     }
