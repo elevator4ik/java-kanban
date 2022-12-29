@@ -9,10 +9,6 @@ public class InMemoryHistoryManager implements HistoryManager {
 
     CustomLinkedList inMemoryHistoryManager = new CustomLinkedList();
 
-    public void printer() {
-        System.out.println(inMemoryHistoryManager.nodeMap + "\n|\n");
-    }
-
     @Override
     public void add(Task task) {
 
@@ -23,8 +19,7 @@ public class InMemoryHistoryManager implements HistoryManager {
     @Override
     public void remove(int id) {
 
-        Node<Task> node = inMemoryHistoryManager.getNodeById(id);
-        inMemoryHistoryManager.removeNode(node);
+        inMemoryHistoryManager.remove(id);
     }
 
     @Override
@@ -34,21 +29,13 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 }
 
-class CustomLinkedList extends LinkedList {
+class CustomLinkedList {
 
     public Node<Task> head = null;//задаем нул, чтобы не писать метод .isEmpty()
     public Node<Task> tail = null;
-    private int size = 0;
 
-    public Map<Integer, Node<Task>> nodeMap = new LinkedHashMap<>();//храним ноды в порядке добавления, обычная мапа
-    // сортирует по ключу, а оно нам не надо
-
-    @Override
-    public int size() {//если не переписать, то всегда дает 0
-
-        return size;
-
-    }
+    public Map<Integer, Node<Task>> nodeMap = new HashMap<>();//храним ноды в порядке добавления(при первоначальных
+    // тестах результат выдавался отсортированным по id, поэтому была выбрана LinkedHashMap).
 
     public void linkLast(Task task) {
 
@@ -58,13 +45,11 @@ class CustomLinkedList extends LinkedList {
 
             this.head = newNode;
             this.tail = this.head;
-            size++;
         } else {
 
             newNode.prev = this.tail;
             this.tail.next = newNode;
             this.tail = newNode;
-            size++;
 
             Node<Task> delNode = nodeMap.getOrDefault(task.getTaskId(), null);// ищем повторы в мапе
             // т.к. мы завязаны на скорости просмотра, то не гоняем .containsKey(), а сразу пишем нод из мапы,
@@ -95,7 +80,15 @@ class CustomLinkedList extends LinkedList {
         return history;
     }
 
-    public void removeNode(Node<Task> node) {//удаляем нод с перезаписью ссылок
+    public void remove(int id) {
+
+        removeNode(nodeMap.get(id));
+        nodeMap.remove(id);
+
+    }
+
+    public void removeNode(Node<Task> node) {//удаляем нод с перезаписью ссылок UPD: комментарии учтены, но nodeMap
+        // трогать надо, чтобы не было дубликатов нодов в мапе, все равно базовые операции выполняются за 0(1).
 
         Node<Task> prevNode;//нужно перезаписать ссылки на предыдущий и следующий ноды для соседей
         Node<Task> nextNode;
@@ -113,51 +106,27 @@ class CustomLinkedList extends LinkedList {
 
         if (prevNode == null) {//если нет предыдущего нода — пишем только следующий и он становится head
 
-            int nextNodeId = getNodeId(nextNode);//ищем id нода, чтоб перезаписать обновлённый в мапу
             nextNode.prev = null;//перезаписываем ссылку
             this.head = nextNode;
 
-            nodeMap.remove(nextNodeId);//перезаписываем обновлённый нод в мапу
-            nodeMap.put(nextNodeId, nextNode);
+            nodeMap.remove(nextNode.data.getTaskId());//перезаписываем обновлённый нод в мапу
+            nodeMap.put(nextNode.data.getTaskId(), nextNode);
         } else if (nextNode == null) {//если нет следующего нода — пишем только предыдущий
 
-            int prevNodeId = getNodeId(prevNode);
             prevNode.next = null;
 
-            nodeMap.remove(prevNodeId);
-            nodeMap.put(prevNodeId, prevNode);
+            nodeMap.remove(prevNode.data.getTaskId());
+            nodeMap.put(prevNode.data.getTaskId(), prevNode);
         } else {//если нод в середине списка — переписываем все
 
-            int prevNodeId = getNodeId(prevNode);
-            int nextNodeId = getNodeId(nextNode);
             prevNode.next = nextNode;
             nextNode.prev = prevNode;
 
-            nodeMap.remove(prevNodeId);
-            nodeMap.remove(nextNodeId);
-            nodeMap.put(prevNodeId, prevNode);
-            nodeMap.put(nextNodeId, nextNode);
+            nodeMap.remove(prevNode.data.getTaskId());
+            nodeMap.remove(nextNode.data.getTaskId());
+            nodeMap.put(prevNode.data.getTaskId(), prevNode);
+            nodeMap.put(nextNode.data.getTaskId(), nextNode);
         }
-        int nodeId = getNodeId(node);
-        nodeMap.remove(nodeId);//удаляем ненужный нод
-        size--;
-    }
-
-    public int getNodeId(Node<Task> node) { //ищем id нода для перезаписи, вынес в отдельный метод, чтоб не дублировать код.
-
-        Set<Map.Entry<Integer, Node<Task>>> entrySet = nodeMap.entrySet();
-        int i = 0; //переменная для ключа
-
-        for (Map.Entry<Integer, Node<Task>> pair : entrySet) {
-            if (node.equals(pair.getValue())) {
-                i = pair.getKey();// нашли наше значение и пишем ключ
-            }
-        }
-        return i; //возвращаем id
-    }
-
-    public Node<Task> getNodeById(int id) {
-
-        return nodeMap.get(id);
+        nodeMap.remove(node.data.getTaskId());//удаляем ненужный нод
     }
 }
