@@ -70,16 +70,16 @@ class CustomLinkedList {
             if (this.head.next == null) {//если в списке только 1 нод, у него нет некста
                 history.add(read.data);
             } else {
-                while (read.next != null) {//цикл while не написал бы последний нод
+                do {
                     history.add(read.data);
                     read = read.next;
-                }
-                history.add(read.data);//тут пишем последний нод
+                   }
+                while (read.next != null);
             }
 
             return history;
         } else {
-            return null;
+            return history;
         }
     }
 
@@ -113,6 +113,7 @@ class CustomLinkedList {
         } else if (nextNode == null && prevNode != null) {//если нет следующего нода — пишем только предыдущий
 
             prevNode.next = null;
+            this.tail = prevNode;
 
         } else if (nextNode == null && prevNode == null) {//если нет ссылок и удаляем последний нод - чистим head и tail
 
