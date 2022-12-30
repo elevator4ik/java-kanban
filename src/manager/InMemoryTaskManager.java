@@ -221,10 +221,12 @@ public class InMemoryTaskManager implements TaskManager {
         historyManager.remove(i);
 
         List<Integer> subTasks = epic.getSubTasks();
-        for (int j : subTasks) {//ищем все сабтаски эпика и удаляем их
+        if (subTasks != null) {//проверяем, есть ли сабтаски у эпика
+            for (int j : subTasks) {//ищем все сабтаски эпика и удаляем их
 
-            subTaskList.remove(j);
-            historyManager.remove(j);
+                subTaskList.remove(j);
+                historyManager.remove(j);
+            }
         }
         epicList.remove(i);
     }

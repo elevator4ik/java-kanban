@@ -34,8 +34,7 @@ class CustomLinkedList {
     public Node<Task> head = null;//задаем нул, чтобы не писать метод .isEmpty()
     public Node<Task> tail = null;
 
-    public Map<Integer, Node<Task>> nodeMap = new HashMap<>();//храним ноды в порядке добавления(при первоначальных
-    // тестах результат выдавался отсортированным по id, поэтому была выбрана LinkedHashMap).
+    public Map<Integer, Node<Task>> nodeMap = new HashMap<>();
 
     public void linkLast(Task task) {
 
@@ -67,17 +66,21 @@ class CustomLinkedList {
         List<Task> history = new ArrayList<>();
         Node<Task> read = this.head;//начинаем с головы, ибо точно знаем, что он первый в списке.
 
-        if (this.head.next == null) {//если в списке только 1 нод, у него нет некста
-            history.add(read.data);
-        } else {
-            while (read.next != null) {//цикл while не написал бы последний нод
+        if (this.head != null) {//проверяем, есть ли начало у списка, если нет - возвращаем null
+            if (this.head.next == null) {//если в списке только 1 нод, у него нет некста
                 history.add(read.data);
-                read = read.next;
+            } else {
+                while (read.next != null) {//цикл while не написал бы последний нод
+                    history.add(read.data);
+                    read = read.next;
+                }
+                history.add(read.data);//тут пишем последний нод
             }
-            history.add(read.data);//тут пишем последний нод
-        }
 
-        return history;
+            return history;
+        } else {
+            return null;
+        }
     }
 
     public void remove(int id) {
@@ -87,8 +90,7 @@ class CustomLinkedList {
 
     }
 
-    public void removeNode(Node<Task> node) {//удаляем нод с перезаписью ссылок UPD: комментарии учтены, но nodeMap
-        // трогать надо, чтобы не было дубликатов нодов в мапе, все равно базовые операции выполняются за 0(1).
+    public void removeNode(Node<Task> node) {//удаляем нод с перезаписью ссылок
 
         Node<Task> prevNode;//нужно перезаписать ссылки на предыдущий и следующий ноды для соседей
         Node<Task> nextNode;
@@ -103,29 +105,23 @@ class CustomLinkedList {
         } else {
             nextNode = null;
         }
-
-        if (prevNode == null) {//если нет предыдущего нода — пишем только следующий и он становится head
+        if (prevNode == null && nextNode != null) {//если нет предыдущего нода — пишем только следующий
 
             nextNode.prev = null;//перезаписываем ссылку
-            this.head = nextNode;
+            this.head = nextNode;//он становится head
 
-            nodeMap.remove(nextNode.data.getTaskId());//перезаписываем обновлённый нод в мапу
-            nodeMap.put(nextNode.data.getTaskId(), nextNode);
-        } else if (nextNode == null) {//если нет следующего нода — пишем только предыдущий
+        } else if (nextNode == null && prevNode != null) {//если нет следующего нода — пишем только предыдущий
 
             prevNode.next = null;
 
-            nodeMap.remove(prevNode.data.getTaskId());
-            nodeMap.put(prevNode.data.getTaskId(), prevNode);
+        } else if (nextNode == null && prevNode == null) {//если нет ссылок и удаляем последний нод - чистим head и tail
+
+            this.head = null;
+            this.tail = null;
         } else {//если нод в середине списка — переписываем все
 
             prevNode.next = nextNode;
             nextNode.prev = prevNode;
-
-            nodeMap.remove(prevNode.data.getTaskId());
-            nodeMap.remove(nextNode.data.getTaskId());
-            nodeMap.put(prevNode.data.getTaskId(), prevNode);
-            nodeMap.put(nextNode.data.getTaskId(), nextNode);
         }
         nodeMap.remove(node.data.getTaskId());//удаляем ненужный нод
     }

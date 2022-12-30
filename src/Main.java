@@ -94,6 +94,8 @@ public class Main {
         System.out.println(manager.getHistory());
 
         manager.deleteEpicById(2);
+        manager.deleteTaskById(1);
+        manager.deleteEpicById(6);
         System.out.println(manager.getHistory());
 
     }
