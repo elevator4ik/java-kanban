@@ -23,6 +23,12 @@ public class InMemoryHistoryManager implements HistoryManager {
     }
 
     @Override
+    public void clear() {
+
+        inMemoryHistoryManager.clear();
+    }
+
+    @Override
     public List<Task> getHistory() {
 
         return inMemoryHistoryManager.getTasks();
@@ -73,20 +79,27 @@ class CustomLinkedList {
                 do {
                     history.add(read.data);
                     read = read.next;
-                   }
-                while (read.next != null);
+                }
+                while (read.next != null);//отловил баг - раньше не читался последний нод, т.е. тэйл
+                read = this.tail;
+                history.add(read.data);
             }
-
-            return history;
-        } else {
-            return history;
         }
+        return history;
     }
 
     public void remove(int id) {
 
         removeNode(nodeMap.get(id));
         nodeMap.remove(id);
+
+    }
+
+    public void clear() {
+
+        nodeMap.clear();
+        this.head = null;
+        this.tail = null;
 
     }
 
@@ -105,17 +118,17 @@ class CustomLinkedList {
         } else {
             nextNode = null;
         }
-        if (prevNode == null && nextNode != null) {//если нет предыдущего нода — пишем только следующий
+        if (prevNode == null & nextNode != null) {//если нет предыдущего нода — пишем только следующий
 
             nextNode.prev = null;//перезаписываем ссылку
             this.head = nextNode;//он становится head
 
-        } else if (nextNode == null && prevNode != null) {//если нет следующего нода — пишем только предыдущий
+        } else if (nextNode == null & prevNode != null) {//если нет следующего нода — пишем только предыдущий
 
             prevNode.next = null;
             this.tail = prevNode;
 
-        } else if (nextNode == null && prevNode == null) {//если нет ссылок и удаляем последний нод - чистим head и tail
+        } else if (prevNode == null & nextNode == null) {//если нет ссылок и удаляем последний нод - чистим head и tail
 
             this.head = null;
             this.tail = null;

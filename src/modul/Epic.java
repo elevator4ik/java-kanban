@@ -19,26 +19,24 @@ public class Epic extends Task {
 
         this.subTasks = i;
     }
+    public static Epic fromString(String value) {
+        String[] newTask = value.split(",");
+        int id = Integer.parseInt(newTask[0]);
+        String taskName = newTask[2];
+        String s = newTask[3];
+        String taskDescription = newTask[4];
+        Status taskStatus;
 
-    @Override
-    public String toString() {
-
-        String printSubTasks;
-        String result = "Epic{" + "name= '" + name + "', \n" +
-                "description= '" + description + "', \n" +
-                "taskId= '" + taskId + "', \n" +
-                "status= '" + status + "', \n" +
-                "SubTasks= ";
-
-        if (subTasks != null) {//проверяем на null
-
-            printSubTasks = subTasks.toString();
-
+        if (s.equals("DONE")) {
+            taskStatus = Status.DONE;
+        } else if (s.equals("NEW")) {
+            taskStatus = Status.NEW;
         } else {
-
-            printSubTasks = "null";
+            taskStatus = Status.IN_PROGRESS;
         }
-        return result + printSubTasks + "}\n";
-    }
 
+        Epic task = new Epic(taskName, taskDescription, taskStatus);
+        task.taskId = id;
+        return task;
+    }
 }

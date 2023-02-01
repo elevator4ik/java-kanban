@@ -1,6 +1,5 @@
 package manager;
 
-
 import history.HistoryManager;
 import modul.Epic;
 import modul.Status;
@@ -144,7 +143,7 @@ public class InMemoryTaskManager implements TaskManager {
         int statNew = 0;//каунтеры для сабтасков с опреденными статусами
         int statDone = 0;
 
-        if (!subTasks.isEmpty()) {
+        if (subTasks != null && !subTasks.isEmpty()) {
             for (int i : subTasks) {
 
                 SubTask subTask = getSubTaskById(i);
