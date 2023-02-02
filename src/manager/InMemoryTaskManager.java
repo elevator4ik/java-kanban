@@ -23,7 +23,7 @@ public class InMemoryTaskManager implements TaskManager {
     List<Integer> subTasks;
     private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
 
-    private int newId() {//метод увеличения счетчика
+    int newId() {//метод увеличения счетчика
 
         int newId = id;
 
@@ -32,11 +32,13 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void addEpic(Epic epic) {//добавляем полученному из вне эпику id и пишем в мапу
+    public void addEpic(Epic epic) {//добавляем полученному из вне эпику id и пишем в мапу, запись в историю перенесена
+        // в метод getXXXById, но у сабтаска add работает через update и, по идее, в историю должны попадать даже новые
+        // сабтаски, так что там ничего не меняю
 
         epic.setTaskId(newId());
         epicList.put(epic.getTaskId(), epic);
-        historyManager.add(epic);
+
 
     }
 
@@ -45,7 +47,7 @@ public class InMemoryTaskManager implements TaskManager {
 
         task.setTaskId(newId());
         taskList.put(task.getTaskId(), task);
-        historyManager.add(task);
+
 
     }
 
@@ -277,13 +279,17 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public Task getTaskById(int i) {//таск по id
 
-        return taskList.get(i);
+        Task task = taskList.get(i);
+        historyManager.add(task);
+        return task;
     }
 
     @Override
     public Epic getEpicById(int i) {//эпик по id
 
-        return epicList.get(i);
+        Epic epic = epicList.get(i);
+        historyManager.add(epic);
+        return epic;
     }
 
     @Override
@@ -305,5 +311,18 @@ public class InMemoryTaskManager implements TaskManager {
     public List<Task> getHistory() {
 
         return historyManager.getHistory();
+    }
+
+    @Override
+    public void readFromFile() {
+    }
+
+    @Override
+    public void idFromFile(int newId){//читаем из файла id и делаем на 1 больше
+        id = newId+1;
+    }
+    @Override
+    public int getLastId(){//нужон для записи в файл
+        return this.id;
     }
 }

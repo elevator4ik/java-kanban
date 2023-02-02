@@ -1,4 +1,5 @@
 
+import manager.FileBackedTasksManager;
 import manager.TaskManager;
 import modul.Epic;
 import modul.Status;
@@ -64,13 +65,20 @@ public class Main {
         manager.updateTask(task);
 
 
-        task = new Task("Second", "Second one task", Status.NEW);
+       task = new Task("Second", "Second one task", Status.IN_PROGRESS);
         task.setTaskId(1);
         manager.updateTask(task);
 
-
+        FileBackedTasksManager.printFile();
         System.out.println(manager.getHistory());//для сравнения истории из памяти и файла
         TaskManager manager3 = Managers.getFileBackedTasksManager();
+        manager3.readFromFile();//заполняем мапы
+        System.out.println(manager3.getEpicList());
+        System.out.println(manager3.getTaskList());
+        System.out.println(manager3.getSubTaskList());
+        System.out.println(manager3.getHistory());
+
+        FileBackedTasksManager.printFile();//сделал статичным и перенес пока в мэйн
     }
 
 

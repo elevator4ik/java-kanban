@@ -19,9 +19,6 @@ public class Managers {
     }
     public static TaskManager getFileBackedTasksManager() {
 
-        FileBackedTasksManager fileBackedTasksManager = new FileBackedTasksManager();
-
-        fileBackedTasksManager.readFromFile();//заполняем мапы и выбрасываем готовый менеджер
-        return fileBackedTasksManager;
+        return new FileBackedTasksManager();
     }
 }

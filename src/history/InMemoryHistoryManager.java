@@ -139,4 +139,5 @@ class CustomLinkedList {
         }
         nodeMap.remove(node.data.getTaskId());//удаляем ненужный нод
     }
+
 }

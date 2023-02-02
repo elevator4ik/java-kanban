@@ -1,10 +1,10 @@
-id,type,name,status,description,epic
 0,TASK,First,IN_PROGRESS,First one task,
-1,TASK,Second,NEW,Second one task,
+1,TASK,Second,IN_PROGRESS,Second one task,
 2,EPIC,First_Epic,IN_PROGRESS,First one Epic,
 6,EPIC,Second_Epic,NEW,Second one Epic,
-5,SUB_TASK,under_first,NEW,third of First,2,
-4,SUB_TASK,under_first,DONE,second of First,2,
 3,SUB_TASK,under_first,DONE,first of First,2,
+4,SUB_TASK,under_first,DONE,second of First,2,
+5,SUB_TASK,under_first,NEW,third of First,2,
  
-2,5,6,4,3,0,1,
+5,4,2,3,0,1,
+

@@ -48,4 +48,8 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
+    void readFromFile();
+
+    void idFromFile(int newId);
+    int getLastId();
 }
