@@ -48,8 +48,10 @@ public interface TaskManager {
 
     void updateEpic(Epic epic);
 
-    void readFromFile();
-
     void idFromFile(int newId);
+
     int getLastId();
+
+    void readFromFile() ;//если убрать его из интерфейса, то в мэйне нужно будет вызывать конкретного менеджера, минуя
+    // класс менеджерс, либо делать статичный метод непосредственно в менеджере, что не есть гуд
 }

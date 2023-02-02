@@ -64,7 +64,7 @@ public class InMemoryTaskManager implements TaskManager {
         if (taskList.containsKey(task.getTaskId())) {
 
             taskList.put(task.getTaskId(), task);
-            historyManager.add(task);
+
         }
 
     }
@@ -74,7 +74,6 @@ public class InMemoryTaskManager implements TaskManager {
 
         Epic epic = getEpicById(subTask.getEpicId());
         subTasks = epic.getSubTasks();
-        historyManager.add(subTask);
 
 
         if (subTasks != null) {
@@ -119,7 +118,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    private void putNewSubTask(SubTask subTask, List<Integer> subTasks) {// добавляем сабтаск в общую мапу и в
+    public void putNewSubTask(SubTask subTask, List<Integer> subTasks) {// добавляем сабтаск в общую мапу и в
         // список сабтасков эпика
 
         subTasks.add(subTask.getTaskId());
@@ -139,7 +138,7 @@ public class InMemoryTaskManager implements TaskManager {
         epicList.put(epic.getTaskId(), epic);
     }
 
-    private Status checkStatus(List<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
+    public Status checkStatus(List<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
 
 
         int statNew = 0;//каунтеры для сабтасков с опреденными статусами
@@ -273,7 +272,10 @@ public class InMemoryTaskManager implements TaskManager {
     @Override
     public SubTask getSubTaskById(int i) {//сабтаск по id
 
-        return subTaskList.get(i);
+        SubTask subTask = subTaskList.get(i);
+        historyManager.add(subTask);
+        return subTask;
+
     }
 
     @Override
@@ -315,6 +317,7 @@ public class InMemoryTaskManager implements TaskManager {
 
     @Override
     public void readFromFile() {
+        throw new UnsupportedOperationException();
     }
 
     @Override

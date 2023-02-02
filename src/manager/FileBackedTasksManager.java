@@ -8,13 +8,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 
 public class FileBackedTasksManager extends manager.InMemoryTaskManager {
 
-    FromString fromString = new FromString();//вынес в отдельный класс
     Path path;
     private static final String fileDir = System.getProperty("user.dir") +
             File.separator +
@@ -146,7 +146,7 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
 
     }
 
-    private void save() throws ManagerSaveException {//перезапись файла
+    private void save() {//перезапись файла
 
         String header = "id,type,name,status,description,epic\n";//пишем шапку файла, а дальше все такси и историю.
         // Задаём жёсткую иерархию записи, дабы упростить последующее считывание файла и избежать.
@@ -200,7 +200,7 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
         }
     }
 
-    @Override//переписать с нуля
+    @Override
     public void readFromFile() {
         StringBuilder wtfReader = new StringBuilder();//билдер чтобы восстановить в конце чтения данные обратно, ибо я
         // не понял, что происходит с файлом, но в нем остается первая строка и история обработки сабтасок. Если не
@@ -214,12 +214,12 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
                     String line = br.readLine();
                     wtfReader.append(line).append("\n");//пишем в билдер данные из файла
                     String[] split = line.split("\n");
-                    if (!split[0].equals("id")) {
+                    if (!"id".equalsIgnoreCase(split[0])) {
 
                         for (String value : split) {
                             String[] split1 = value.split(",");
 
-                            if (!split1[0].equals(" ")) {//триггер на разделитель между тасками и историей
+                            if (!" ".equalsIgnoreCase(split1[0])) {//триггер на разделитель между тасками и историей
 
                                 int ttId = Integer.parseInt(split1[0]);//сравниваем id и пишем больший
                                 if (ttId > newId) {
@@ -229,19 +229,42 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
                                     // файл, чтение происходит по принципу таск-эпик-сабтаск и проблем с отсутствием
                                     // эпикоа при записи сабтаска не будет
                                     case "TASK":
-                                        Task task = fromString.taskFromString(split1);
+                                        Task task = FromString.taskFromString(split1);
                                         taskList.put(task.getTaskId(), task);
 
                                         break;
                                     case "EPIC":
-                                        Epic epic = fromString.epicFromString(split1);
+                                        Epic epic = FromString.epicFromString(split1);
                                         epicList.put(epic.getTaskId(), epic);
 
                                         break;
                                     case "SUB_TASK":
-                                        SubTask subTask = fromString.subTaskFromString(split1);
+                                        SubTask subTask = FromString.subTaskFromString(split1);
                                         subTaskList.put(subTask.getTaskId(), subTask);
-                                        super.updateSubTask(subTask);//обноввляем сабтасклист эпика при каждом чтении сабтаска
+                                        Epic epicST = getEpicById(subTask.getEpicId());
+                                        subTasks = epicST.getSubTasks();
+
+
+                                        if (subTasks != null) {//переписан сюда полностью super.updateSubTask()
+                                            if (subTasks.contains(subTask.getTaskId())) {
+                                                subTasks.remove((Integer) subTask.getTaskId());
+                                            }
+                                            putNewSubTask(subTask, subTasks);
+
+                                            status = checkStatus(subTasks);
+
+                                            rewriteEpic(epicST, subTasks, status);
+
+                                        } else {
+
+                                            subTasks = new ArrayList<>();
+
+                                            putNewSubTask(subTask, subTasks);
+
+                                            status = subTask.getStatus();
+
+                                            rewriteEpic(epicST, subTasks, status);
+                                        }
 
                                         break;
                                     default: //теперь пишем историю
@@ -271,7 +294,7 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
             }
             Files.write(path, Collections.singleton(wtfReader));//восстанавливаем данные в файле
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new ManagerSaveException();//кидаем то, что есть, если будет необходимость - создам потом новый
         }
     }
 
