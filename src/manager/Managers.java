@@ -1,9 +1,7 @@
-package util;
+package manager;
 
 import history.InMemoryHistoryManager;
-import manager.FileBackedTasksManager;
-import manager.InMemoryTaskManager;
-import manager.TaskManager;
+
 
 
 public class Managers {

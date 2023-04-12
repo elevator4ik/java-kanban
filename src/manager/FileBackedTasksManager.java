@@ -13,20 +13,45 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class FileBackedTasksManager extends manager.InMemoryTaskManager {
+public class FileBackedTasksManager extends InMemoryTaskManager {
 
-    Path path;
-    private static final String fileDir = System.getProperty("user.dir") +
+    public Path path;
+    private static String fileDir = System.getProperty("user.dir") +
             File.separator +
             "src" +
             File.separator +
             "files" +
             File.separator +
-            "storage.csv";//Прописываем путь к файлу. Скорее всего дальше будет реализована возможность подгрузки
-    // информации из разных файлов и в меню будет выбираться файл, который потом будет передаваться в методы чтения/
-    // записи, но пока руками задаём путь.
+            "storage.csv";//путь к файлу прописываем при сощдании менеджера.
+
+    public FileBackedTasksManager(int test) {//конструктор для тестов, передаем любое целочисленное значение как флаг
+
+        fileDir = System.getProperty("user.dir") +
+                File.separator +
+                "src" +
+                File.separator +
+                "files" +
+                File.separator +
+                "testStorage.csv";
+        try {
+            this.path = Paths.get(fileDir);
+            if (!Files.exists(path)) {
+
+                Files.createFile(path);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public FileBackedTasksManager() {//конструктор для проверки и создания файла, если он не существует
+        fileDir = System.getProperty("user.dir") +
+                File.separator +
+                "src" +
+                File.separator +
+                "files" +
+                File.separator +
+                "storage.csv";
         try {
             this.path = Paths.get(fileDir);
             if (!Files.exists(path)) {
@@ -97,14 +122,6 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
     }
 
     @Override
-    public void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {
-
-        super.rewriteEpic(epic, subTasks, statusNew);
-
-        save();
-    }
-
-    @Override
     public void deleteEpicList() {
 
         super.deleteEpicList();
@@ -148,19 +165,66 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
 
     private void save() {//перезапись файла
 
-        String header = "id,type,name,status,description,epic\n";//пишем шапку файла, а дальше все такси и историю.
-        // Задаём жёсткую иерархию записи, дабы упростить последующее считывание файла и избежать.
+        String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";//пишем шапку файла,
+        // а дальше все таски и историю.
+        // Задаём жёсткую иерархию записи, дабы упростить последующее считывание файла и избежать ошибок.
         StringBuilder task = new StringBuilder();
         StringBuilder epic = new StringBuilder();
         StringBuilder subTask = new StringBuilder();
         StringBuilder history = new StringBuilder();
         List<Task> historyMan = historyManager.getHistory();
-        //System.out.println(historyMan);
+
         for (Task thisTask : historyMan) {//идем по истории и сразу пишем ее в билдер
 
             int thisId = thisTask.getTaskId();
             history.append(thisId).append(",");
         }
+        writingToBuilders(task, epic, subTask);
+
+        try {
+
+            Files.write(path, (header + task + epic + subTask + "\n" + " \n" + history + "\n").getBytes());//пишем в файл
+        } catch (IOException e) {// если ловим IOException, то выбрасываем своё исколючение
+            throw new ManagerSaveException();
+        }
+    }
+
+    @Override
+    public void readFromFile() {
+        StringBuilder wtfReader = new StringBuilder();//билдер чтобы восстановить в конце чтения данные обратно, если не
+        // использовать после этого метода save(), то файл накрывается
+        try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
+            if (br.readLine() == null) {
+                System.out.println("Файл истории пуст");
+            } else {
+                fileReading(br, wtfReader);
+            }
+            Files.write(path, Collections.singleton(wtfReader));//восстанавливаем данные в файле
+        } catch (IOException e) {
+            throw new ManagerSaveException();
+        }
+    }
+
+
+    private void getSortTasksFromFile(Task task) {
+
+        sortetTasks.add(task);
+    }
+
+    @Override
+    public String printFile() {//метод для тестов
+        String content = "";
+        try {
+            content = Files.readString(Paths.get(fileDir));
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return content;
+    }
+
+    private void writingToBuilders(StringBuilder task, StringBuilder epic, StringBuilder subTask) {
         for (int i = 0; i < super.getLastId(); i++) {
             if (taskList.containsKey(i)) {//сверяем со списками и пишем в интересующий билдер
                 Task thisTask = taskList.get(i);
@@ -169,8 +233,10 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
                         .append(",").append(thisTask.getName())
                         .append(",").append(thisTask.getStatus())
                         .append(",").append(thisTask.getDescription())
+                        .append(",").append(thisTask.getDuration())
+                        .append(",").append(thisTask.getStartTime())
                         .append(",\n");
-            } else if (epicList.containsKey(i)) {//если не сделать эпик эпиком - не пишет в файл
+            } else if (epicList.containsKey(i)) {
 
                 Epic thisEpic = epicList.get(i);
                 epic.append(thisEpic.getTaskId())
@@ -178,133 +244,111 @@ public class FileBackedTasksManager extends manager.InMemoryTaskManager {
                         .append(",").append(thisEpic.getName())
                         .append(",").append(thisEpic.getStatus())
                         .append(",").append(thisEpic.getDescription())
+                        .append(",").append(thisEpic.getDuration())
+                        .append(",").append(thisEpic.getStartTime())
+                        .append(",").append(thisEpic.getEndTime())
                         .append(",\n");
             } else if (subTaskList.containsKey(i)) {
 
-                SubTask thisSubTask = subTaskList.get(i);//приводм к типу сабтаск, т.к. пишем уникальные для типа данные
+                SubTask thisSubTask = subTaskList.get(i);
                 subTask.append(thisSubTask.getTaskId())
                         .append(",").append(TaskType.SUB_TASK)
                         .append(",").append(thisSubTask.getName())
                         .append(",").append(thisSubTask.getStatus())
                         .append(",").append(thisSubTask.getDescription())
+                        .append(",").append(thisSubTask.getDuration())
+                        .append(",").append(thisSubTask.getStartTime())
+                        .append(",")//ничего непишем, т.к. здесь должен быть эндтайм, а он только у эпика
                         .append(",").append(thisSubTask.getEpicId())
-                        .append(",\n");
+                        .append(",");
             }
-        }
-
-        try {
-            //System.out.println(task +"\n"+ epic +"\n"+ subTask +"\n"+ history +"\n");
-            Files.write(path, (header + task + epic + subTask + " \n" + history + "\n").getBytes());//пишем в файл
-        } catch (IOException e) {//ловим IOException и выбрасываем свое
-            throw new ManagerSaveException();
         }
     }
 
-    @Override
-    public void readFromFile() {
-        StringBuilder wtfReader = new StringBuilder();//билдер чтобы восстановить в конце чтения данные обратно, ибо я
-        // не понял, что происходит с файлом, но в нем остается первая строка и история обработки сабтасок. Если не
-        // использовать после этого метода save(), то файл накрывается медным агрегатом, менее
-        try (BufferedReader br = new BufferedReader(new FileReader(fileDir))) {
-            if (br.readLine() == null) {
-                System.out.println("Файл истории пуст");
-            } else {
-                int newId = 0;//чтобы записать id в менеджер
-                while (br.ready()) {
-                    String line = br.readLine();
-                    wtfReader.append(line).append("\n");//пишем в билдер данные из файла
-                    String[] split = line.split("\n");
-                    if (!"id".equalsIgnoreCase(split[0])) {
+    private void fileReading(BufferedReader br, StringBuilder wtfReader) throws IOException {
+        int newId = 0;//чтобы записать id в менеджер
+        while (br.ready()) {
+            String line = br.readLine();
+            wtfReader.append(line).append("\n");//пишем в билдер данные из файла
+            String[] split = line.split("\n");
+            if (!"id".equals(split[0])) {
 
-                        for (String value : split) {
-                            String[] split1 = value.split(",");
+                for (String value : split) {
+                    String[] split1 = value.split(",");
 
-                            if (!" ".equalsIgnoreCase(split1[0])) {//триггер на разделитель между тасками и историей
+                    if (!" ".equals(split1[0]) && !"".equals(split1[0])) {//триггер на разделитель между тасками и историей
 
-                                int ttId = Integer.parseInt(split1[0]);//сравниваем id и пишем больший
-                                if (ttId > newId) {
-                                    newId = ttId;
-                                }
-                                switch (split1[1]) {//раскидываем таски по своим мапам. Ввиду жесткой иерархии записи в
-                                    // файл, чтение происходит по принципу таск-эпик-сабтаск и проблем с отсутствием
-                                    // эпикоа при записи сабтаска не будет
-                                    case "TASK":
-                                        Task task = FromString.taskFromString(split1);
-                                        taskList.put(task.getTaskId(), task);
-
-                                        break;
-                                    case "EPIC":
-                                        Epic epic = FromString.epicFromString(split1);
-                                        epicList.put(epic.getTaskId(), epic);
-
-                                        break;
-                                    case "SUB_TASK":
-                                        SubTask subTask = FromString.subTaskFromString(split1);
-                                        subTaskList.put(subTask.getTaskId(), subTask);
-                                        Epic epicST = getEpicById(subTask.getEpicId());
-                                        subTasks = epicST.getSubTasks();
-
-
-                                        if (subTasks != null) {//переписан сюда полностью super.updateSubTask()
-                                            if (subTasks.contains(subTask.getTaskId())) {
-                                                subTasks.remove((Integer) subTask.getTaskId());
-                                            }
-                                            putNewSubTask(subTask, subTasks);
-
-                                            status = checkStatus(subTasks);
-
-                                            rewriteEpic(epicST, subTasks, status);
-
-                                        } else {
-
-                                            subTasks = new ArrayList<>();
-
-                                            putNewSubTask(subTask, subTasks);
-
-                                            status = subTask.getStatus();
-
-                                            rewriteEpic(epicST, subTasks, status);
-                                        }
-
-                                        break;
-                                    default: //теперь пишем историю
-
-                                        for (String s : split1) {
-
-                                            int j = Integer.parseInt(s);
-
-                                            if (taskList.containsKey(j)) {
-
-                                                historyManager.add(taskList.get(j));
-                                            } else if (epicList.containsKey(j)) {
-
-                                                historyManager.add(epicList.get(j));
-                                            } else if (subTaskList.containsKey(j)) {
-
-                                                historyManager.add(subTaskList.get(j));
-                                            }
-                                        }
-                                        break;
-                                }
-                            }
+                        int findedId = Integer.parseInt(split1[0]);//сравниваем id и пишем больший
+                        if (findedId > newId) {
+                            newId = findedId;
                         }
+
+                        writingToLists(split1);
                     }
                 }
-                super.idFromFile(newId);//пишем id в менеджер
             }
-            Files.write(path, Collections.singleton(wtfReader));//восстанавливаем данные в файле
-        } catch (IOException e) {
-            throw new ManagerSaveException();//кидаем то, что есть, если будет необходимость - создам потом новый
+            super.idFromFile(newId);//пишем id в менеджер
         }
     }
 
-    public static void printFile() {//метод для тестов
-        try {
-            String content = Files.readString(Paths.get(fileDir));
-            System.out.println(content);
+    private void writingToLists(String[] split1) {
+        if (split1.length>1) {//проверяем, более ли чем 1 запись в истории
+            switch (split1[1]) {//раскидываем таски по своим мапам. Ввиду жесткой иерархии записи в
+                // файл, чтение происходит по принципу таск-эпик-сабтаск и проблем с отсутствием
+                // эпика при записи сабтаска не будет
+                case "TASK":
+                    Task task = FromString.taskFromString(split1);
+                    taskList.put(task.getTaskId(), task);
+                    getSortTasksFromFile(task);
 
-        } catch (IOException e) {
-            e.printStackTrace();
+                    break;
+                case "EPIC":
+                    Epic epic = FromString.epicFromString(split1);
+                    epicList.put(epic.getTaskId(), epic);
+
+                    break;
+                case "SUB_TASK":
+                    SubTask subTask = FromString.subTaskFromString(split1);
+                    subTaskList.put(subTask.getTaskId(), subTask);
+                    Epic epicST = getEpicById(subTask.getEpicId());
+                    List<Integer> subTasks = epicST.getSubTasks();
+
+                    getSortTasksFromFile(subTask);
+                    if (subTasks == null) {//записываем сабтаски
+
+                        subTasks = new ArrayList<>();
+                    }
+
+                    subTasks.add(subTask.getTaskId());
+                    epicST.setSubTasks(subTasks);
+
+                    break;
+                default: //теперь пишем историю
+
+                    for (String s : split1) {
+
+                        historyWrite(s);
+                    }
+                    break;
+            }
+        } else {
+            historyWrite(split1[0]);
         }
+    }
+    private void historyWrite(String s){
+
+        int j = Integer.parseInt(s);
+
+        if (taskList.containsKey(j)) {
+
+            historyManager.add(taskList.get(j));
+        } else if (epicList.containsKey(j)) {
+
+            historyManager.add(epicList.get(j));
+        } else if (subTaskList.containsKey(j)) {
+
+            historyManager.add(subTaskList.get(j));
+        }
+
     }
 }

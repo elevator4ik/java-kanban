@@ -1,15 +1,24 @@
 package modul;
 
-public class Task {
+import java.time.LocalDateTime;
+
+public class Task implements Comparable<Task> {
     protected String name;
     protected String description;
     protected int taskId;
     protected Status status;
+    protected int duration;
+    protected LocalDateTime startTime;
 
-    public Task(String name, String description, Status status) {
+    public Task() {
+    }//конструктор для эпика
+
+    public Task(String name, String description, Status status, int duration, LocalDateTime startTime) {
         this.name = name;
         this.description = description;
         this.status = status;
+        this.duration = duration;
+        this.startTime = startTime;
     }
 
     public int getTaskId() {
@@ -31,17 +40,57 @@ public class Task {
 
         this.status = status;
     }
+
     public String getName() {
 
         return name;
     }
+
     public String getDescription() {
 
         return description;
     }
 
-    public String toString() {
-        return taskId + "," + name + "," + status + "," + description + ",\n";
+    public int getDuration() {
+
+        return duration;
     }
 
+    public LocalDateTime getStartTime() {
+
+        return startTime;
+    }
+
+    public LocalDateTime getEndTime() {
+
+        return startTime.plusMinutes(duration);
+    }
+
+    public String toString() {
+        return taskId + "," + name + "," + status + "," + description + "," + duration + "," + startTime + ",\n";
+    }
+
+    @Override
+    public int compareTo(Task o) {
+        if (startTime.isAfter(o.getEndTime())) {
+            return 1;
+        } else if (getEndTime().isBefore(o.startTime)) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+
+    public boolean equals(Task o) {
+        if ((o != null) && (getClass() == o.getClass())) {
+            return this.taskId == o.getTaskId()
+                    && !this.name.equals(o.getName())
+                    && !this.description.equals(o.getDescription())
+                    && !this.status.equals(o.getStatus())
+                    && this.duration != o.getDuration()
+                    && !this.startTime.isEqual(o.getStartTime());
+        } else {
+            return false;
+        }
+    }
 }

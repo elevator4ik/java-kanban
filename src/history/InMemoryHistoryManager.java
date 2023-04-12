@@ -80,7 +80,7 @@ class CustomLinkedList {
                     history.add(read.data);
                     read = read.next;
                 }
-                while (read.next != null);//отловил баг - раньше не читался последний нод, т.е. тэйл
+                while (read.next != null);
                 read = this.tail;
                 history.add(read.data);
             }
@@ -90,9 +90,10 @@ class CustomLinkedList {
 
     public void remove(int id) {
 
-        removeNode(nodeMap.get(id));
-        nodeMap.remove(id);
-
+        if (nodeMap.containsKey(id)) {
+            removeNode(nodeMap.get(id));
+            nodeMap.remove(id);
+        }
     }
 
     public void clear() {
@@ -100,7 +101,6 @@ class CustomLinkedList {
         nodeMap.clear();
         this.head = null;
         this.tail = null;
-
     }
 
     public void removeNode(Node<Task> node) {//удаляем нод с перезаписью ссылок
