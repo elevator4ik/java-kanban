@@ -1,4 +1,4 @@
-package Tests;
+package tests.manager;
 
 import manager.TaskManager;
 import modul.Epic;
@@ -120,9 +120,9 @@ abstract class TaskManagerTest {
         epicTasks.add(subTask.getTaskId());
         expectedEpic.setTaskId(0);
         expectedEpic.setSubTasks(epicTasks);
-        expectedEpic.setStartTime(subTask);
-        expectedEpic.setEndTime(subTask);
-        expectedEpic.plusDuration(subTask);
+        expectedEpic.setStartTime(subTask.getStartTime());
+        expectedEpic.setEndTime(subTask.getEndTime());
+        expectedEpic.setDuration(subTask.getDuration());
 
         assertNotNull(updatedEpic.getSubTasks(), "Подзадачи на возвращаются.");
         assertEquals(1, updatedEpic.getSubTasks().size(), "Неверное количество подзадач.");
@@ -350,10 +350,9 @@ newTask.setTaskId(0);
         epicTasks.add(subTask.getTaskId());
         expectedEpic.setTaskId(0);
         expectedEpic.setSubTasks(epicTasks);
-        expectedEpic.setStartTime(subTask);
-        expectedEpic.plusDuration(subTask);
-        expectedEpic.plusDuration(forExpectedEndTime);
-        expectedEpic.setEndTime(forExpectedEndTime);
+        expectedEpic.setStartTime(subTask.getStartTime());
+        expectedEpic.setDuration(subTask.getDuration() + forExpectedEndTime.getDuration());
+        expectedEpic.setEndTime(forExpectedEndTime.getEndTime());
 
 
         assertNotNull(updatedEpic.getSubTasks(), "Подзадачи на возвращаются.");

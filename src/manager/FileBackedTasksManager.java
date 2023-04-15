@@ -30,6 +30,8 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                 File.separator +
                 "src" +
                 File.separator +
+                "tests" +
+                File.separator +
                 "files" +
                 File.separator +
                 "testStorage.csv";

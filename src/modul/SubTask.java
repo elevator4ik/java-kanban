@@ -20,12 +20,15 @@ public class SubTask extends Task {
         return taskId + "," + name + "," + status + "," + description + "," + duration + "," + startTime + "," + epicId + ",\n";
     }
 
-    public boolean equals(SubTask o) {
-        boolean result;
-        if (super.equals(o)) {
-            result = this.getEpicId() == o.getEpicId();
-        } else {
-            result = false;
+    @Override
+    public boolean equals(Object o) {
+        boolean result = false;
+        if ((o != null) && (getClass() == o.getClass())) {
+            SubTask newS = (SubTask) o;
+
+            if (super.equals(newS)) {
+                result = getEpicId() == newS.getEpicId();
+            }
         }
         return result;
     }

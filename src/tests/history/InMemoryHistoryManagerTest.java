@@ -1,17 +1,20 @@
-package Tests;
+package tests.history;
 
 
 import history.HistoryManager;
 import history.InMemoryHistoryManager;
 import modul.SubTask;
 import modul.Task;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static modul.Status.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static modul.Status.NEW;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class InMemoryHistoryManagerTest {
     HistoryManager inMemoryHistoryManager;

@@ -1,7 +1,6 @@
 package modul;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 
 public class Epic extends Task {
@@ -26,7 +25,7 @@ public class Epic extends Task {
     @Override
     public LocalDateTime getEndTime() {
 
-        return this.endTime;
+        return endTime;
     }
 
     public void setSubTasks(List<Integer> i) {
@@ -35,93 +34,53 @@ public class Epic extends Task {
 
     }
 
-    public void setEndTime(SubTask subTask) {
-        if (endTime == null || this.endTime.isBefore(subTask.getEndTime())) {
-            this.endTime = subTask.getEndTime();
-        }
+    public void setEndTime(LocalDateTime time) {
+
+        endTime = time;
     }
 
-    public void setStartTime(SubTask subTask) {
+    public void setStartTime(LocalDateTime time) {
 
-        if (startTime == null || this.startTime.isAfter(subTask.getStartTime())) {
-            this.startTime = subTask.startTime;
-        }
+        startTime = time;
+    }
+
+    public void setDuration(int i) {
+
+        duration = i;
     }
 
     @Override
     public String toString() {
-        return taskId +","+ name +","+ status +","+ description +","+ duration +","+ startTime +","+ endTime +",\n";
-    }
-    public void plusDuration(SubTask subTask) {
-
-        if (subTasks != null && !subTasks.isEmpty()) {
-
-            this.duration += subTask.getDuration();//высчитываем длительность
-            setStartTime(subTask);//записываем дату начала
-            setEndTime(subTask);//записываем дату завершения
-
-        } else if (this.startTime.isAfter(subTask.getStartTime())) {
-
-            this.startTime = subTask.getStartTime();
-            this.duration += subTask.getDuration();
-        } else if (this.endTime.isBefore(subTask.getEndTime())) {
-
-            this.endTime = subTask.getEndTime();
-            this.duration += subTask.getDuration();
-        } else {
-            this.duration = subTask.getDuration();
-        }
+        return taskId + "," + name + "," + status + "," + description + "," +
+                duration + "," + startTime + "," + endTime + ",\n";
     }
 
-    public void minusDuration(HashMap<Integer, SubTask> subTaskList, SubTask subTask) {
-
-        this.duration -= subTask.getDuration();//высчитываем длительность
-
-        if (this.duration == 0) {//если 0, знаичт больше нет сабтасок, старт и эндтайм трём
-            this.startTime = null;
-            this.endTime = null;
-        } else {
-            if (this.startTime.isEqual(subTask.startTime)) {//проверяем, был ли это самый ранний из сабтасок
-                for (int i = 0; i < subTasks.size(); i++) {//если да - ищем новый первый в очереди сабтаск
-                    SubTask epicSubTask = subTaskList.get(i);
-                    if (epicSubTask != null) {
-                        this.startTime = epicSubTask.startTime;//пишем новый старттайм
-                        if (subTasks.contains(i + 1)) {
-                            SubTask nextSubTask = subTaskList.get(subTasks.get(i + 1));
-                            if (nextSubTask.startTime.isBefore(this.startTime)) {
-                                this.startTime = nextSubTask.getStartTime();//переписываем старттайм, если нашли более ранний
-                            }
-                        }
-                    }
-                }
-            }
-            if (this.endTime.isEqual(subTask.getEndTime())) {//по аналогии со старттаймом
-                for (int i = 0; i < subTasks.size(); i++) {
-                    SubTask epicSubTask = subTaskList.get(i);
-                    this.endTime = epicSubTask.getEndTime();
-                    if (subTasks.contains(i + 1)) {
-                        SubTask nextSubTask = subTaskList.get(subTasks.get(i + 1));
-                        if (nextSubTask.getEndTime().isAfter(this.endTime)) {
-                            this.endTime = nextSubTask.getEndTime();
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    public boolean equals(Epic o) {
+    @Override
+    public boolean equals(Object o) {//полностью переопределяем метод, т.к. есть полностью вычисляемые поля
+        boolean result = false;
         if ((o != null) && (getClass() == o.getClass())) {
-            return this.taskId == o.getTaskId()
-                    && this.name.equals(o.getName())
-                    && this.description.equals(o.getDescription())
-                    && this.status.equals(o.getStatus())
-                    && this.duration != o.getDuration()
-                    && this.startTime.isEqual(o.getStartTime())
-                    && this.endTime.isEqual(o.getEndTime());
-        } else {
-            return false;
+            Epic newE = (Epic) o;
+
+            if (taskId == newE.getTaskId()
+                    & name.equals(newE.getName())
+                    & description.equals(newE.getDescription())
+                    & status.equals(newE.getStatus())
+                    & duration == newE.getDuration()) {
+                if (endTime != null & newE.getEndTime() != null) {
+                    if (endTime.isEqual(newE.getEndTime())) {
+                        if (startTime != null & newE.getStartTime() != null) {
+                            result = startTime.isEqual(newE.getStartTime());
+
+                        } else {
+                            result = (startTime == newE.getStartTime());//если одно из значени null, то equal даст NPE
+                        }
+                    }
+                } else {
+                    result = (endTime == newE.getEndTime());
+                }
+            }
         }
+        return result;
     }
 }
 

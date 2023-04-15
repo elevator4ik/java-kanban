@@ -1,4 +1,4 @@
-package Tests;
+package tests.modul;
 
 import manager.FileBackedTasksManager;
 import manager.TaskManager;

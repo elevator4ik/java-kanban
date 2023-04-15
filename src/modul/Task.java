@@ -2,7 +2,7 @@ package modul;
 
 import java.time.LocalDateTime;
 
-public class Task implements Comparable<Task> {
+public class Task {
     protected String name;
     protected String description;
     protected int taskId;
@@ -71,24 +71,15 @@ public class Task implements Comparable<Task> {
     }
 
     @Override
-    public int compareTo(Task o) {
-        if (startTime.isAfter(o.getEndTime())) {
-            return 1;
-        } else if (getEndTime().isBefore(o.startTime)) {
-            return -1;
-        } else {
-            return 0;
-        }
-    }
-
-    public boolean equals(Task o) {
+    public boolean equals(Object o) {
         if ((o != null) && (getClass() == o.getClass())) {
-            return this.taskId == o.getTaskId()
-                    && !this.name.equals(o.getName())
-                    && !this.description.equals(o.getDescription())
-                    && !this.status.equals(o.getStatus())
-                    && this.duration != o.getDuration()
-                    && !this.startTime.isEqual(o.getStartTime());
+            Task newT = (Task) o;
+            return taskId == newT.getTaskId()
+                    & name.equals(newT.getName())
+                    & description.equals(newT.getDescription())
+                    & status.equals(newT.getStatus())
+                    & duration == newT.getDuration()
+                    & startTime.isEqual(newT.getStartTime());
         } else {
             return false;
         }

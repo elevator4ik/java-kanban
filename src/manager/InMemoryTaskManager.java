@@ -14,7 +14,10 @@ public class InMemoryTaskManager implements TaskManager {
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
 
-    TreeSet<Task> sortetTasks = new TreeSet<>();
+    TreeSet<Task> sortetTasks = new TreeSet<>(
+            Comparator.comparing(
+                    Task::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
+    );
     Status status;
 
     private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
@@ -84,7 +87,7 @@ public class InMemoryTaskManager implements TaskManager {
         }
     }
 
-    public void updatingSubTask(SubTask subTask) {//чтобы не производить проверку пересечения при вызове updateSubTask
+    private void updatingSubTask(SubTask subTask) {//чтобы не производить проверку пересечения при вызове updateSubTask
         // из addSubTask, вынес тело в отдельный метод.
 
         Epic epic = getEpicById(subTask.getEpicId());
@@ -94,7 +97,6 @@ public class InMemoryTaskManager implements TaskManager {
         if (subTasks != null) {
             if (subTasks.contains(subTask.getTaskId())) {//проверяем, есть ли в сабтасках эпика уже такой сабтаск
                 subTasks.remove((Integer) subTask.getTaskId());//удаляем, чтобы не было дублей
-                epic.minusDuration(subTaskList, subTask);//уменьшаем продолжительность эпика
             }
             putNewSubTask(subTask, subTasks);
 
@@ -110,7 +112,6 @@ public class InMemoryTaskManager implements TaskManager {
 
         }
         rewriteEpic(epic, subTasks, status);
-        epic.plusDuration(subTask);//увеличиваем продолжительность эпика
     }
 
 
@@ -130,7 +131,6 @@ public class InMemoryTaskManager implements TaskManager {
             status = checkStatus(subTasks);
 
             rewriteEpic(epic, subTasks, status);
-            epic.minusDuration(subTaskList, subTask);
         }
     }
 
@@ -149,7 +149,7 @@ public class InMemoryTaskManager implements TaskManager {
             for (int i : subTaskList.keySet()) {
 
                 SubTask s = subTaskList.get(i);
-                removewFromSortetTasks(s);
+                removeFromSortedTasks(s);
                 historyManager.remove(i);
             }
             subTaskList.clear();//если удаляем все эпики, то и сабтаски с ними, проверять статусы не у чего.
@@ -181,9 +181,8 @@ public class InMemoryTaskManager implements TaskManager {
             for (int i : subTaskList.keySet()) {
 
                 SubTask s = subTaskList.get(i);
-                Epic e = epicList.get(s.getEpicId());
-                e.minusDuration(subTaskList, s);
-                removewFromSortetTasks(s);
+
+                removeFromSortedTasks(s);
                 historyManager.remove(i);
             }
         }
@@ -208,7 +207,7 @@ public class InMemoryTaskManager implements TaskManager {
             for (int j : subTasks) {//ищем все сабтаски эпика и удаляем их
 
                 SubTask s = subTaskList.get(j);
-                removewFromSortetTasks(s);
+                removeFromSortedTasks(s);
                 subTaskList.remove(j);
                 historyManager.remove(j);
             }
@@ -220,7 +219,7 @@ public class InMemoryTaskManager implements TaskManager {
     public void deleteTaskById(int i) {//удаление таска по id из мапы
 
         Task s = taskList.get(i);
-        removewFromSortetTasks(s);
+        removeFromSortedTasks(s);
         taskList.remove(i);
         historyManager.remove(i);
 
@@ -230,30 +229,24 @@ public class InMemoryTaskManager implements TaskManager {
     public List<SubTask> getSubTaskList() {//вывод списка сабтасков
 
         Collection<SubTask> values = subTaskList.values();
-        List<SubTask> list;
-        list = new ArrayList<>(values);
 
-        return list;
+        return new ArrayList<>(values);
     }
 
     @Override
     public List<Task> getTaskList() {//выводим все таски
 
         Collection<Task> values = taskList.values();
-        List<Task> list;
-        list = new ArrayList<>(values);
 
-        return list;
+        return new ArrayList<>(values);
     }
 
     @Override
     public List<Epic> getEpicList() {//получение списка эпиков
 
         Collection<Epic> values = epicList.values();
-        List<Epic> list;
-        list = new ArrayList<>(values);
 
-        return list;
+        return new ArrayList<>(values);
     }
 
     @Override
@@ -335,15 +328,15 @@ public class InMemoryTaskManager implements TaskManager {
     private void addToSortetTasks(Task task) {//добавление в сортированный список тасков и сабтасков
         //т.к. конструктор таски и сабтаски не дает возможности создавать их без старттйма и длительности - при
         // добавлении в список они сразу сортируются и нет необходимости добавлять в конец списка задачи без старттайма
-        if (sortetTasks != null && !sortetTasks.isEmpty()) {
-            removewFromSortetTasks(task);//код тот же, только в конце мы записываем новый таск/сабтаск
+        if (sortetTasks != null) {
+            if (!sortetTasks.isEmpty()) {
+                removeFromSortedTasks(task);//код тот же, только в конце мы записываем новый таск/сабтаск
+            }
             sortetTasks.add(task);
         }
-        sortetTasks.add(task);//игнорируем предупреждение о возможном NullPointerException, т.к. мы ожидаем первую запись
-        // в только созданный трисэт и она точно произойдёт.
     }
 
-    private void removewFromSortetTasks(Task task) {//удаление из сортированного списка тасков и сабтасков
+    private void removeFromSortedTasks(Task task) {//удаление из сортированного списка тасков и сабтасков
 
         sortetTasks.removeIf(t -> t.getTaskId() == task.getTaskId());//т.к. поля могут меняться, то проверка на
         // идентичность через hashcode или equals может не сработать, поэтому сравниваем перебором по id
@@ -355,15 +348,18 @@ public class InMemoryTaskManager implements TaskManager {
         LocalDateTime endT = task.getEndTime();
         boolean b = false;
 
-        if (sortetTasks != null && !sortetTasks.isEmpty()) {
-            for (Task t : sortetTasks) {
-                if (t.getTaskId() != task.getTaskId() &&//если не переписываем уже существующую задачу
-                        (endT.isAfter(t.getStartTime()) & endT.isBefore(t.getEndTime())) |//завершение попало в пересечение
-                                (startT.isBefore(t.getStartTime()) & endT.isAfter(t.getEndTime())) |//существующий таск перекрыт
-                                (startT.isAfter(t.getStartTime()) & startT.isBefore(t.getEndTime()))//начало попало в пересечение
-                ) {
-                    b = true;
-                }
+        for (Task t : sortetTasks) {//строгая проверка условыий нужна для четкого определния границ.
+            if (endT.isAfter(t.getStartTime()) & endT.isBefore(t.getEndTime())) {//завершение попало в пересечение, если
+                // оно жестко после начала и до окончания уже существующей задачи, поэтому и &, а не &&. в остальных
+                // условиях принцип тот же.
+                b = true;
+                break;
+            } else if (startT.isBefore(t.getStartTime()) & endT.isAfter(t.getEndTime())) {//существующий таск перекрыт
+                b = true;
+                break;
+            } else if (startT.isAfter(t.getStartTime()) & startT.isBefore(t.getEndTime())) {//начало попало в пересечение
+                b = true;
+                break;
             }
         }
         return b;
@@ -378,10 +374,37 @@ public class InMemoryTaskManager implements TaskManager {
         addToSortetTasks(subTask);
     }
 
-    private void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {
+    private void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {//сюда перенесены расчёты начала,
+        // конца и продолжительности эпика
         epic.setStatus(statusNew);
         epic.setSubTasks(subTasks);
-        epicList.put(epic.getTaskId(), epic);
+        if (subTasks != null && !subTasks.isEmpty()) {
+            int duration = 0;
+            for (int i : subTasks) {
+                SubTask subTask = subTaskList.get(i);
+                if (epic.getEndTime() == null || epic.getEndTime().isBefore(subTask.getEndTime())) {// Вынесено из эпика.
+                    // Оставил isBefore, потому что тут идет проверка: позже ли заканчивается сабтаск, чем уже
+                    // прописанное значение в эпике. Если написать isAfter, то true будет если сабтаск завершается
+                    // раньше эпика, а это не правильно.
+                    epic.setEndTime(subTask.getEndTime());
+                }
+                if (epic.getStartTime() == null || epic.getStartTime().isAfter(subTask.getStartTime())) {//Вынесено из
+                    // эпика. История аналогична расчёту времени окончания: если написать isBefore, то проверяем, раньше
+                    // ли начинается эпик, чем переданный сабтаск, а должно быть наоборот.
+                    epic.setStartTime(subTask.getStartTime());
+                }
+                duration += subTask.getDuration();
+            }
+
+            epic.setDuration(duration);
+            epicList.put(epic.getTaskId(), epic);
+        } else {//если нет сабтасков - возвращаемся к состоянию нового эпика. расчет статуса происходит перед вызовом
+            // этого метода, поэтому всегда передается корректный статус и тут его не надо принудительно делать NEW.
+            epic.setStartTime(null);
+            epic.setEndTime(null);
+            epic.setDuration(0);
+        }
+
     }
 
     private Status checkStatus(List<Integer> subTasks) { //проверяем статус эпика и сабтасков после обновления
