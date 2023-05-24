@@ -186,7 +186,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
         try {
 
-            Files.write(path, (header + task + epic + subTask + "\n" + " \n" + history + "\n").getBytes());//пишем в файл
+            Files.write(path, (header + task + epic + subTask+ " \n" + history + "\n").getBytes());//пишем в файл
         } catch (IOException e) {// если ловим IOException, то выбрасываем своё исколючение
             throw new ManagerSaveException();
         }

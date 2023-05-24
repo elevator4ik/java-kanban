@@ -5,11 +5,15 @@ import KV.KVClient;
 import com.google.gson.*;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import modul.*;
+import modul.Epic;
+import modul.LocalDateTypeAdapter;
+import modul.SubTask;
+import modul.Task;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -641,8 +645,6 @@ public class HttpTaskServer extends FileBackedTasksManager {
             String[] split = i.split(",");
 
             if (!"id".equals(split[0])) {
-                for (String value : split) {
-                    String[] split1 = value.split(",");
 
                     if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
 
@@ -653,7 +655,7 @@ public class HttpTaskServer extends FileBackedTasksManager {
 
                         writingToLists(split);
                     }
-                }
+
                 super.idFromFile(newId);//пишем id в менеджер
             }
         }
