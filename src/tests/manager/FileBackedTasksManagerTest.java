@@ -24,7 +24,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
     @BeforeEach
     void creating() {//перед каждым тестом создаём чистый менеджер
 
-        taskManager = new FileBackedTasksManager(0);//передаем значение как флаг
+        taskManager = new FileBackedTasksManager(1);//передаем значение как флаг
 
     }
 

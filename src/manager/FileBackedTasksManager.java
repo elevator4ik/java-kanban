@@ -27,23 +27,28 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     public FileBackedTasksManager(int test) {//конструктор для тестов, передаем любое целочисленное значение как флаг
 
-        fileDir = System.getProperty("user.dir") +
-                File.separator +
-                "src" +
-                File.separator +
-                "tests" +
-                File.separator +
-                "files" +
-                File.separator +
-                "testStorage.csv";
-        try {
-            this.path = Paths.get(fileDir);
-            if (!Files.exists(path)) {
+        if (test==1) {
 
-                Files.createFile(path);
+            fileDir = System.getProperty("user.dir") +
+                    File.separator +
+                    "src" +
+                    File.separator +
+                    "tests" +
+                    File.separator +
+                    "files" +
+                    File.separator +
+                    "testStorage.csv";
+            try {
+                this.path = Paths.get(fileDir);
+                if (!Files.exists(path)) {
+
+                    Files.createFile(path);
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } else {
+            new FileBackedTasksManager();
         }
     }
 
