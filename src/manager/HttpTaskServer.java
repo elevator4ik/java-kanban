@@ -2,13 +2,17 @@ package manager;
 
 
 import KV.KVClient;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import modul.Epic;
 import modul.LocalDateTypeAdapter;
 import modul.SubTask;
 import modul.Task;
+
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -17,7 +21,6 @@ import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
-
 
 public class HttpTaskServer extends FileBackedTasksManager {
 
@@ -71,8 +74,9 @@ public class HttpTaskServer extends FileBackedTasksManager {
                 h.close();
                 return;
             }
-            loadFromServer(key);
+
             if (method.equals("GET")) {
+                loadFromServer(key);
                 String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
                         getTaskList() +
                         getEpicList() +
@@ -120,9 +124,10 @@ public class HttpTaskServer extends FileBackedTasksManager {
                 h.close();
                 return;
             }
-            loadFromServer(key);
+
             switch (method) {
                 case "GET":
+                    loadFromServer(key);
                     if (taskList.containsKey(id)) {
 
                         String value = ("id,type,name,status,description,duration,startTime,endTime\n" +
@@ -145,7 +150,7 @@ public class HttpTaskServer extends FileBackedTasksManager {
                     Task task = gson.fromJson(jsonElement, Task.class);
 
                     if (id != -11 && taskList.containsKey(id)) {
-
+                        task.setTaskId(id);
                         updateTask(task);
                         saveOnServer(key);
                         String value = "Task с id " + id + " успешно обновлен";
@@ -179,6 +184,8 @@ public class HttpTaskServer extends FileBackedTasksManager {
                     }
                     break;
                 case "DELETE":
+                    loadFromServer(key);
+                    System.out.println(getTaskList());
                     if (taskList.containsKey(id)) {
 
                         deleteTaskById(id);
@@ -227,9 +234,10 @@ public class HttpTaskServer extends FileBackedTasksManager {
                 h.close();
                 return;
             }
-            loadFromServer(key);
+
             switch (method) {
                 case "GET":
+                    loadFromServer(key);
                     if (epicList.containsKey(id)) {
 
                         String value = ("id,type,name,status,description,duration,startTime,endTime\n" +
@@ -283,6 +291,7 @@ public class HttpTaskServer extends FileBackedTasksManager {
                     }
                     break;
                 case "DELETE":
+                    loadFromServer(key);
                     if (epicList.containsKey(id)) {
 
                         deleteEpicById(id);
@@ -332,9 +341,10 @@ public class HttpTaskServer extends FileBackedTasksManager {
                 h.close();
                 return;
             }
-            loadFromServer(key);
+
             switch (method) {
                 case "GET":
+                    loadFromServer(key);
                     if (subTaskList.containsKey(id)) {
                         String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
                                 getSubTaskById(id)).replaceAll("[\\[\\]]", "");
@@ -393,6 +403,7 @@ public class HttpTaskServer extends FileBackedTasksManager {
                     break;
 
                 case "DELETE":
+                    loadFromServer(key);
                     if (subTaskList.containsKey(id)) {
 
                         deleteSubTaskById(id);
@@ -444,8 +455,9 @@ public class HttpTaskServer extends FileBackedTasksManager {
                 h.close();
                 return;
             }
-            loadFromServer(key);
+
             if (method.equals("GET")) {
+                loadFromServer(key);
                 String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
                         getHistory()).replaceAll("[\\[\\]]", "")
                         .replaceAll("\n, ", "\n");
@@ -614,7 +626,7 @@ public class HttpTaskServer extends FileBackedTasksManager {
     /**
      * Пока идут тесты - будет паблик, дальше должен стать приват
      */
-    public void saveOnServer(int key) {
+    private void saveOnServer(int key) {
 
         String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";
         StringBuilder task = new StringBuilder();
@@ -639,34 +651,30 @@ public class HttpTaskServer extends FileBackedTasksManager {
         int newId = 0;//чтобы записать id в менеджер
         String keyForClient = String.valueOf(key);
         String result = kvClient.load(keyForClient);
-
+        historyManager.clear();//чистим все хранилища и счетик перед записью информации с сервера
+        taskList.clear();
+        subTaskList.clear();
+        epicList.clear();
+        sortetTasks.clear();
+        id = 0;
         String[] splitFirst = result.split("\n");
         for (String i : splitFirst) {
             String[] split = i.split(",");
 
             if (!"id".equals(split[0])) {
 
-                    if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
+                if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
 
-                        int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
-                        if (findedId > newId) {
-                            newId = findedId;
-                        }
-
-                        writingToLists(split);
+                    int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
+                    if (findedId > newId) {
+                        newId = findedId;
                     }
+
+                    writingToLists(split);
+                }
 
                 super.idFromFile(newId);//пишем id в менеджер
             }
         }
-    }
-
-    /**
-     * ДЛЯ ТЕСТОВ ИЗ МЭЙНА!!!! УДАЛИТЬ, КОГДА НАЧТУ ПИСАТЬ ЮНИТ-ТЕСТЫ!!!
-     */
-    @Override
-    public void readFromFile() {
-        super.readFromFile();
-        saveOnServer(1234);
     }
 }

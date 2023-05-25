@@ -13,14 +13,12 @@ public class InMemoryTaskManager implements TaskManager {
     HashMap<Integer, Epic> epicList = new HashMap<>();
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
-
     TreeSet<Task> sortetTasks = new TreeSet<>(
             Comparator.comparing(
                     Task::getStartTime, Comparator.nullsLast(Comparator.naturalOrder()))
     );
     Status status;
-
-    private int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
+    int id = 0;// счетчик для id, постоянно увеличивается на 1, где бы не создавался id.
 
     public InMemoryTaskManager() {
     }
