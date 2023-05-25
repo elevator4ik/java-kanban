@@ -304,7 +304,7 @@ public class HttpTaskServerTest {
             System.out.println("Где-то случилось непоправимое");
         }
 
-        final Epic epic = new Epic("Test Epic", "Test save description", NEW);//id 2
+        final Epic epic = new Epic("Test Epic", "Test save description", NEW);//id2
         jsonTask = gson.toJson(epic);
         url = URI.create("http://localhost:8080/tasks/epic?id=2&key=1234");
         request = HttpRequest.newBuilder()
