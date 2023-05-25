@@ -1,31 +1,6 @@
 id,type,name,status,description,duration,startTime,endTime,epic
-0,TASK,First,IN_PROGRESS,First one task,10,2023-01-01T10:00,
-1,TASK,Second,IN_PROGRESS,Second one task,10,2023-01-01T10:30,
-2,EPIC,First_Epic,IN_PROGRESS,First one Epic,20,2023-01-01T11:00,2023-01-01T12:10,
-3,SUB_TASK,under_first,DONE,first of First,10,2023-01-01T11:00,,2,
-4,SUB_TASK,under_first,DONE,second of First,10,2023-01-01T11:30,,2,
-5,SUB_TASK,under_first,NEW,third of First,10,2023-01-01T12:00,,2,
-
-2,5,4,3,0,
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+0,TASK,Test Task,NEW,Test save description,10,2023-01-02T11:00,
+2,EPIC,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,
+4,SUB_TASK,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,,2,
+ 
+2,0,
