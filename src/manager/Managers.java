@@ -1,16 +1,13 @@
 package manager;
 
-import com.google.gson.GsonBuilder;
 import history.InMemoryHistoryManager;
-
-import java.time.LocalDateTime;
 
 
 public class Managers {
 
     public static TaskManager getDefault() {
 
-        return getHttpTaskServer();
+        return getHttpTaskManager();
     }
 
     public static InMemoryHistoryManager getDefaultHistory() {
@@ -26,8 +23,8 @@ public class Managers {
         return new InMemoryTaskManager();
     }
 
-    public static TaskManager getHttpTaskServer() {
+    public static TaskManager getHttpTaskManager() {
 
-        return new HttpTaskServer();
+        return new HttpTaskManager();
     }
 }

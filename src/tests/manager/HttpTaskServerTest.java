@@ -27,9 +27,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class HttpTaskServerTest {
 
-     HttpClient client;
+    HttpClient client;
     Gson gson;
-    KVServer server ;
+    KVServer server;
     URI url;
     HttpRequest request;
     TaskManager manager;
@@ -199,14 +199,14 @@ public class HttpTaskServerTest {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assertEquals("200\nid,type,name,status,description,duration,startTime,endTime,epic\n" +
-                    "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
-                    "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
-                    "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n" +
-                    "3,Test Second Epic,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,\n" +
-                    "4,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,2,\n" +
-                    "5,Test Second SubTask,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,3,\n",
+                            "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
+                            "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
+                            "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n" +
+                            "3,Test Second Epic,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,\n" +
+                            "4,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,2,\n" +
+                            "5,Test Second SubTask,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,3,\n",
                     response.statusCode() + "\n" +
-                    response.body(), "Неверное сохранение на сервер.");
+                            response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое");
         }
@@ -252,7 +252,7 @@ public class HttpTaskServerTest {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assertEquals("200\nid,type,name,status,description,duration,startTime,endTime\n" +
-                    "0,Test Task,NEW,Test save description,10,2023-01-02T11:00,2023-01-02T11:10,\n",
+                            "0,Test Task,NEW,Test save description,10,2023-01-02T11:00,2023-01-02T11:10,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое");

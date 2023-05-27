@@ -1,9 +1,6 @@
 package KV;
 
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,7 +21,7 @@ public class KVClient {
 
     }
 
-    public void put(int key, String json) {
+    public void save(int key, String json) {
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
@@ -54,8 +51,7 @@ public class KVClient {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                JsonElement jsonElement = JsonParser.parseString(response.body());
-                return jsonElement.getAsString();
+                return response.body();
             } else {
                 System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
                 return null;

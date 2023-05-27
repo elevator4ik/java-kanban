@@ -8,7 +8,6 @@ import java.util.List;
 
 public interface TaskManager {
 
-    void stopIt();//для тестов эндпоинтов
     void addEpic(Epic epic);
 
     void addTask(Task task);
@@ -53,10 +52,9 @@ public interface TaskManager {
 
     int getLastId();
 
-    void readFromFile() ;/*если убрать его из интерфейса, то в мэйне нужно будет вызывать конкретного менеджера, минуя
-    класс менеджерс, либо делать статичный метод непосредственно в менеджере, что не есть гуд*/
-
     String getPrioritizedTasks();
 
     String printFile();
+
+    void stopIt();//если не прописать метод в интерфейсе, то HttpServer в HttpTaskManager не сможет завершить работу
 }

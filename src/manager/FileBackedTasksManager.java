@@ -171,7 +171,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
     }
 
-    private void save() {//перезапись файла
+    public void save() {//перезапись файла
 
         String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";//пишем шапку файла,
         // а дальше все таски и историю.
@@ -188,17 +188,14 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             history.append(thisId).append(",");
         }
         writingToBuilders(task, epic, subTask);
-
         try {
-
             Files.write(path, (header + task + epic + subTask+ " \n" + history + "\n").getBytes());//пишем в файл
-        } catch (IOException e) {// если ловим IOException, то выбрасываем своё исколючение
+        } catch (IOException e) {
             throw new ManagerSaveException();
         }
     }
 
-    @Override
-    public void readFromFile() {
+    private void readFromSource() {
         StringBuilder wtfReader = new StringBuilder();//билдер чтобы восстановить в конце чтения данные обратно, если не
         // использовать после этого метода save(), то файл накрывается
         String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";
@@ -214,7 +211,6 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
             throw new ManagerSaveException();
         }
     }
-
 
     void getSortTasksFromFile(Task task) {
 
@@ -360,6 +356,5 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
             historyManager.add(subTaskList.get(j));
         }
-
     }
 }

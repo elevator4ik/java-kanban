@@ -9,7 +9,7 @@ import java.util.*;
 
 public class InMemoryTaskManager implements TaskManager {
 
-    HistoryManager historyManager = Managers.getDefaultHistory();
+    public HistoryManager historyManager = Managers.getDefaultHistory();
     HashMap<Integer, Epic> epicList = new HashMap<>();
     HashMap<Integer, Task> taskList = new HashMap<>();
     HashMap<Integer, SubTask> subTaskList = new HashMap<>();
@@ -29,11 +29,6 @@ public class InMemoryTaskManager implements TaskManager {
 
         id++;
         return newId;
-    }
-
-    @Override
-    public void stopIt() {
-
     }
 
     @Override
@@ -300,12 +295,6 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void readFromFile() {
-        throw new ManagerSaveException();
-    }
-
-
-    @Override
     public void idFromFile(int newId) {//читаем из файла id и делаем на 1 больше
         id = newId + 1;
     }
@@ -330,7 +319,25 @@ public class InMemoryTaskManager implements TaskManager {
         throw new ManagerSaveException();
     }
 
-    private void addToSortetTasks(Task task) {//добавление в сортированный список тасков и сабтасков
+    public void addTaskFromServer(Task task) {
+        taskList.put(task.getTaskId(), task);
+        addToSortetTasks(task);
+    }
+    public void addSubTaskFromServer(SubTask task) {
+        subTaskList.put(task.getTaskId(), task);
+        addToSortetTasks(task);
+    }
+    public void addEpicFromServer(Epic task) {
+        epicList.put(task.getTaskId(), task);
+
+    }
+
+    @Override
+    public void stopIt() throws ManagerSaveException{
+        throw new ManagerSaveException();
+    }
+
+    public void addToSortetTasks(Task task) {//добавление в сортированный список тасков и сабтасков
         //т.к. конструктор таски и сабтаски не дает возможности создавать их без старттйма и длительности - при
         // добавлении в список они сразу сортируются и нет необходимости добавлять в конец списка задачи без старттайма
         if (sortetTasks != null) {
@@ -382,7 +389,7 @@ public class InMemoryTaskManager implements TaskManager {
         addToSortetTasks(subTask);
     }
 
-    private void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {//сюда перенесены расчёты начала,
+    public void rewriteEpic(Epic epic, List<Integer> subTasks, Status statusNew) {//сюда перенесены расчёты начала,
         // конца и продолжительности эпика
         epic.setStatus(statusNew);
         epic.setSubTasks(subTasks);
@@ -403,7 +410,7 @@ public class InMemoryTaskManager implements TaskManager {
                 }
                 duration += subTask.getDuration();
             }
-
+            epic.setStatus(checkStatus(subTasks));
             epic.setDuration(duration);
             epicList.put(epic.getTaskId(), epic);
         } else {//если нет сабтасков - возвращаемся к состоянию нового эпика. расчет статуса происходит перед вызовом
