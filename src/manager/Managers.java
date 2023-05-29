@@ -23,7 +23,7 @@ public class Managers {
         return new InMemoryTaskManager();
     }
 
-    public static TaskManager getHttpTaskManager() {
+    public static HttpTaskManager getHttpTaskManager() {
 
         return new HttpTaskManager();
     }

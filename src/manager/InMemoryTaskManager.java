@@ -333,7 +333,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void stopIt() throws ManagerSaveException{
+    public void readFromSource() throws ManagerSaveException{
         throw new ManagerSaveException();
     }
 

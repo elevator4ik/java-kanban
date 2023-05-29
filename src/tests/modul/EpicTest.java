@@ -4,11 +4,15 @@ import manager.FileBackedTasksManager;
 import manager.TaskManager;
 import modul.Epic;
 import modul.SubTask;
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.time.LocalDateTime;
 import java.util.List;
+
 import static modul.Status.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class EpicTest {//обновление статуса происходит через менеджера, так что в этих тестах покрывается требование проверки
     // расчёта статуса эпика для менеджеров.
@@ -18,7 +22,7 @@ class EpicTest {//обновление статуса происходит че�
 
     @BeforeEach
     void start(){
-        taskManager = new FileBackedTasksManager(0);//для записи данных о сабтасках в эпик
+        taskManager = new FileBackedTasksManager(1);//для записи данных о сабтасках в эпик
         epic.setTaskId(0);
         taskManager.addEpic(epic);
     }

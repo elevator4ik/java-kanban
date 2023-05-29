@@ -8,9 +8,7 @@ import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import manager.InMemoryTaskManager;
-import manager.Managers;
 import modul.*;
-
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -72,7 +70,7 @@ public class HttpTaskServer {
             if (param != null && param.contains("key=")) {
                 key = chekForKey(h, param);
             } else {
-                System.out.println("Некорректный запрос?.");
+                System.out.println("Некорректный запрос.");
                 h.sendResponseHeaders(405, 0);
                 h.getResponseBody();
                 return;
@@ -85,8 +83,8 @@ public class HttpTaskServer {
                 return;
             }
             if (method.equals("GET")) {
-                loadFromServer(key);
-                String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
+                loadFromServer(key, h);
+                String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
                         manager.getTaskList() +
                         manager.getEpicList() +
                         manager.getSubTaskList()).replaceAll("[\\[\\]]", "")
@@ -139,10 +137,10 @@ public class HttpTaskServer {
 
             switch (method) {
                 case "GET":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("Task")) {
+                    loadFromServer(key, h);
+                    if (checkForContains(h, id).equals("task")) {
 
-                        String value = ("id,type,name,status,description,duration,startTime,endTime\n" +
+                        String value = ("id,name,status,description,duration,startTime,endTime\n" +
                                 manager.getTaskById(id)).replaceAll("[\\[\\]]", "");
 
                         h.sendResponseHeaders(200, 0);
@@ -155,30 +153,29 @@ public class HttpTaskServer {
                     }
                     break;
                 case "POST":
-                    loadFromServer(key);
+                    loadFromServer(key, h);
                     String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
                             .lines().collect(Collectors.joining("\n"));
                     JsonElement jsonElement = JsonParser.parseString(result);
 
                     Task task = gson.fromJson(jsonElement, Task.class);
 
-                    if (id != -11 && checkForContains(h, id).equals("Task")) {
+                    if (checkForContains(h, id).equals("task")) {
                         task.setTaskId(id);
                         manager.updateTask(task);
+
                         saveOnServer(key, h);
                         String value = "Task с id " + id + " успешно обновлен";
 
                         h.sendResponseHeaders(200, 0);
                         h.getResponseBody().write(value.getBytes());
-                        System.out.println(value);
-                    } else if (id == -11) {
+
+                    } else if (checkForType(h).equals("task")) {
                         int listSize = manager.getTaskList().size();//записываем длинну тасклиста, чтобы удостовериться,
                         //что новый таск не попал в пересечение с другими и, если таки попал, сигнализировать об ошибке
                         manager.addTask(task);
-
                         if (manager.getTaskList().size() == listSize) {
                             String value = "Задача пересекается с одной из существующих.";
-
                             h.sendResponseHeaders(402, 0);
                             h.getResponseBody().write(value.getBytes());
                             System.out.println(value);
@@ -197,8 +194,8 @@ public class HttpTaskServer {
                     }
                     break;
                 case "DELETE":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("Task")) {
+                    loadFromServer(key, h);
+                    if (checkForContains(h, id).equals("task")) {
 
                         manager.deleteTaskById(id);
                         saveOnServer(key, h);
@@ -252,10 +249,11 @@ public class HttpTaskServer {
 
             switch (method) {
                 case "GET":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("Epic")) {
+                    loadFromServer(key, h);
 
-                        String value = ("id,type,name,status,description,duration,startTime,endTime\n" +
+                    if (checkForContains(h, id).equals("epic")) {
+
+                        String value = ("id,name,status,description,duration,startTime,endTime\n" +
                                 manager.getEpicById(id)).replaceAll("[\\[\\]]", "");
 
                         h.sendResponseHeaders(200, 0);
@@ -268,26 +266,24 @@ public class HttpTaskServer {
                     }
 
                 case "POST":
-                    loadFromServer(key);
+                    loadFromServer(key, h);
                     String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
                             .lines().collect(Collectors.joining("\n"));
                     JsonElement jsonElement = JsonParser.parseString(result);
 
                     Epic task = gson.fromJson(jsonElement, Epic.class);
-                    if (id != -11 && checkForContains(h, id).equals("Epic")) {
+                    if (checkForContains(h, id).equals("epic")) {
 
                         String value = "Epic с id " + id + " уже существует";
 
                         h.sendResponseHeaders(402, 0);
                         h.getResponseBody().write(value.getBytes());
                         System.out.println(value);
-                    } else if (id == -11) {
+                    } else if (checkForType(h).equals("epic")) {
                         int listSize = manager.getEpicList().size();
-
                         manager.addEpic(task);
                         if (manager.getEpicList().size() == listSize) {
                             String value = "Задача пересекается с одной из существующих.";
-
                             h.sendResponseHeaders(402, 0);
                             h.getResponseBody().write(value.getBytes());
                             System.out.println(value);
@@ -307,8 +303,8 @@ public class HttpTaskServer {
                     }
                     break;
                 case "DELETE":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("Epic")) {
+                    loadFromServer(key, h);
+                    if (checkForContains(h, id).equals("epic")) {
 
                         manager.deleteEpicById(id);
                         saveOnServer(key, h);
@@ -363,9 +359,9 @@ public class HttpTaskServer {
 
             switch (method) {
                 case "GET":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("SubTask")) {
-                        String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
+                    loadFromServer(key, h);
+                    if (checkForContains(h, id).equals("subtask")) {
+                        String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
                                 manager.getSubTaskById(id)).replaceAll("[\\[\\]]", "");
 
                         h.sendResponseHeaders(200, 0);
@@ -378,15 +374,15 @@ public class HttpTaskServer {
                     }
                     break;
                 case "POST":
-                    loadFromServer(key);
+                    loadFromServer(key, h);
                     String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
                             .lines().collect(Collectors.joining("\n"));
                     JsonElement jsonElement = JsonParser.parseString(result);
 
                     SubTask task = gson.fromJson(jsonElement, SubTask.class);
 
-                    if (id != -11 && checkForContains(h, id).equals("SubTask")) {
-
+                    if (checkForContains(h, id).equals("subtask")) {
+                        task.setTaskId(id);
                         manager.updateSubTask(task);
                         saveOnServer(key, h);
 
@@ -395,7 +391,7 @@ public class HttpTaskServer {
                         h.sendResponseHeaders(200, 0);
                         h.getResponseBody().write(value.getBytes());
                         System.out.println(value);
-                    } else if (id == -11) {
+                    } else if (checkForType(h).equals("subtask")) {
                         int listSize = manager.getSubTaskList().size();
 
                         manager.addSubTask(task);
@@ -423,8 +419,8 @@ public class HttpTaskServer {
                     break;
 
                 case "DELETE":
-                    loadFromServer(key);
-                    if (checkForContains(h, id).equals("SubTask")) {
+                    loadFromServer(key, h);
+                    if (checkForContains(h, id).equals("subtask")) {
 
                         manager.deleteSubTaskById(id);
                         saveOnServer(key, h);
@@ -480,8 +476,8 @@ public class HttpTaskServer {
             }
 
             if (method.equals("GET")) {
-                loadFromServer(key);
-                String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
+                loadFromServer(key, h);
+                String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
                         manager.getHistory()).replaceAll("[\\[\\]]", "")
                         .replaceAll("\n, ", "\n");
 
@@ -523,12 +519,10 @@ public class HttpTaskServer {
 
         String newId = param.substring(param.indexOf("id=") + 3, param.indexOf("&"));
 
-        if (!newId.isEmpty() & !newId.equals("new")) {
+        if (!newId.isEmpty()) {
             return Integer.parseInt(newId);//выцепляем id
-        } else if (newId.equals("new")) {
-            return -11;
         } else {
-            System.out.println("taskId отсутствует в запросе.");
+            System.out.println("Id отсутствует в запросе.");
             h.sendResponseHeaders(403, 0);
             h.getResponseBody();
             return -1;
@@ -536,7 +530,7 @@ public class HttpTaskServer {
     }
 
     private void saveOnServer(int key, HttpExchange h) {// сохраняет в HttpTaskManager свое состояние
-
+        String keyForSend = String.valueOf(key);
         String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";
         StringBuilder task = new StringBuilder();
         StringBuilder epic = new StringBuilder();
@@ -549,15 +543,15 @@ public class HttpTaskServer {
             int thisId = thisTask.getTaskId();
             history.append(thisId).append(",");
         }
-        writingToBuilders(task, epic, subTask, h);
+        writingToBuilders(task, epic, subTask);
 
         String allInString = header + task + epic + subTask + " \n" + history + "\n";
         String jsonTaskManager = gson.toJson(allInString);
-        kvClient.put(key, jsonTaskManager);
+        URI url = URI.create("http://localhost:8079/save?key=" + keyForSend);
         HttpRequest request = HttpRequest.newBuilder()
-                .POST(HttpRequest.BodyPublishers.ofString(json))
-                .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
+                .uri(url)
                 .header("Accept", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(jsonTaskManager))
                 .build();
 
         try {
@@ -568,13 +562,12 @@ public class HttpTaskServer {
                 System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
             }
         } catch (IOException | InterruptedException e) {
-            System.out.println("Во время выполнения запроса возникла ошибка.");
+            System.out.println("Во время выполнения запроса возникла ошибка. " + e + "\n");
+            e.printStackTrace();
+            stopIt();
         }
     }
 
-    /**
-     * ТУТ ОСТАНОВИЛСЯ
-     */
     private void loadFromServer(int key, HttpExchange h) throws IOException {//грузит из HttpTaskManager его состояние
         int newId = 0;
         String keyForSend = String.valueOf(key);
@@ -584,28 +577,32 @@ public class HttpTaskServer {
                 .header("Accept", "application/json")
                 .GET()
                 .build();
+
         try {
+
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
-                        .lines().collect(Collectors.joining("\n"));
-                String[] splitFirst = result.split("\n");
-                for (String i : splitFirst) {
-                    String[] split = i.split(",");
+                JsonElement jsonElement = JsonParser.parseString(response.body());
 
-                    if (!"id".equals(split[0])) {
+                String result = jsonElement.getAsString().replaceAll("\"", "");
+                if (result.equals("blank")) {
+                    System.out.println("Ответ пришел пустым");
+                } else {
+                    String[] splitFirst = result.split("\n");
+                    for (String i : splitFirst) {
+                        String[] split = i.split(",");
 
-                        if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
+                        if (!"id".equals(split[0])) {
+                            if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
 
-                            int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
-                            if (findedId > newId) {
-                                newId = findedId;
+                                int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
+                                if (findedId > newId) {
+                                    newId = findedId;
+                                }
+                                writingToLists(split, key, h);
                             }
-
-                            writingToLists(split, key, h);
+                            manager.idFromFile(newId);//пишем id в менеджер
                         }
-
-                        manager.idFromFile(newId);//пишем id в менеджер
                     }
                 }
             } else {
@@ -613,20 +610,45 @@ public class HttpTaskServer {
             }
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое");
+
         }
+    }
+
+    private String checkForType(HttpExchange h) {
+
+        String url = h.getRequestURI().getPath();
+        String listToSerach = h.getRequestURI().getPath().substring(url.indexOf("/tasks/") + 7);
+        String result = "false";
+        switch (listToSerach) {
+            case "task":
+
+                        result = "task";
+
+                break;
+            case "subtask":
+
+                        result = "subtask";
+
+                break;
+            case "epic":
+
+                        result = "epic";
+
+                break;
+        }
+        return result;
     }
 
     private String checkForContains(HttpExchange h, int id) {
 
-        String url = h.getRequestURI().getPath();
-        String listToSerach = h.getRequestURI().getPath().substring(url.indexOf("/tasks/") + 7, url.indexOf("?"));
+        String type = checkForType(h);
         String result = "false";
-        switch (listToSerach) {
+        switch (type) {
             case "task":
                 List<Task> taskList = manager.getTaskList();
                 for (Task t : taskList) {
                     if (t.getTaskId() == id) {
-                        result = "Task";
+                        result = "task";
                         break;
                     }
                 }
@@ -635,7 +657,7 @@ public class HttpTaskServer {
                 List<SubTask> subTasklist = manager.getSubTaskList();
                 for (SubTask t : subTasklist) {
                     if (t.getTaskId() == id) {
-                        result = "SubTask";
+                        result = "subtask";
                         break;
                     }
                 }
@@ -644,7 +666,7 @@ public class HttpTaskServer {
                 List<Epic> epiclist = manager.getEpicList();
                 for (Epic t : epiclist) {
                     if (t.getTaskId() == id) {
-                        result = "Epic";
+                        result = "epic";
                         break;
                     }
                 }
@@ -702,21 +724,47 @@ public class HttpTaskServer {
 
         int j = Integer.parseInt(s);
 
-        if (checkForContains(h, key).equals("Task")) {
+        if (checkForContains(h, key).equals("task")) {
             manager.historyManager.add(manager.getTaskById(j));
-        } else if (checkForContains(h, key).equals("Epic")) {
+        } else if (checkForContains(h, key).equals("epic")) {
             manager.historyManager.add(manager.getEpicById(j));
-        } else if (checkForContains(h, key).equals("SubTask")) {
+        } else if (checkForContains(h, key).equals("subtask")) {
             manager.historyManager.add(manager.getSubTaskById(j));
         }
     }
+    private String checkForContainsInLists(int id) {
+        List<SubTask> subTasklist = manager.getSubTaskList();
+        List<Epic> epiclist = manager.getEpicList();
+        List<Task> taskList = manager.getTaskList();
+        String result = "false";
 
-    void writingToBuilders(StringBuilder task, StringBuilder epic, StringBuilder subTask, HttpExchange h) {//public чтобы
+                for (Task t : taskList) {
+                    if (t.getTaskId() == id) {
+                        result = "task";
+                        break;
+                    }
+                }
+                for (SubTask t : subTasklist) {
+                    if (t.getTaskId() == id) {
+                        result = "subtask";
+                        break;
+                    }
+                }
+                for (Epic t : epiclist) {
+                    if (t.getTaskId() == id) {
+                        result = "epic";
+                        break;
+                    }
+                }
+        return result;
+    }
+
+   private void writingToBuilders(StringBuilder task, StringBuilder epic, StringBuilder subTask) {//public чтобы
         // запускать из HttpTaskServer
         for (int i = 0; i < manager.getLastId(); i++) {
 
-            switch (checkForContains(h, i)) {
-                case "Task":
+            switch (checkForContainsInLists(i)) {
+                case "task":
                     Task thisTask = manager.getTaskById(i);
                     task.append(thisTask.getTaskId())
                             .append(",").append(TaskType.TASK)
@@ -727,7 +775,7 @@ public class HttpTaskServer {
                             .append(",").append(thisTask.getStartTime())
                             .append(",\n");
                     break;
-                case "Epic":
+                case "epic":
 
                     Epic thisEpic = manager.getEpicById(i);
                     epic.append(thisEpic.getTaskId())
@@ -740,7 +788,7 @@ public class HttpTaskServer {
                             .append(",").append(thisEpic.getEndTime())
                             .append(",\n");
                     break;
-                case "SubTask":
+                case "subtask":
 
                     SubTask thisSubTask = manager.getSubTaskById(i);
                     subTask.append(thisSubTask.getTaskId())

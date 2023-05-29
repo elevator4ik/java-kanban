@@ -24,7 +24,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
     @BeforeEach
     void creating() {//перед каждым тестом создаём чистый менеджер
 
-        taskManager = new FileBackedTasksManager(1);//передаем значение как флаг
+    taskManager = new FileBackedTasksManager(1);//передаем значение как флаг
 
     }
 
@@ -51,7 +51,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
                 "1,EPIC,Test save,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
                 "2,SUB_TASK,Test save,NEW,Test save description,10,2023-01-01T11:00,,1,\n" +
                 " \n" +
-                "1,\n", taskManager.printFile(), "Неверная запись в файл.");
+                "1,2,\n", taskManager.printFile(), "Неверная запись в файл.");
     }
 
     @Test
@@ -82,7 +82,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
             throw new RuntimeException(e);
         }
 
-        taskManager.readFromFile();
+        taskManager.readFromSource();
 
         assertEquals("[0,Test updateTask,IN_PROGRESS,Test updateTask new description,10,2023-01-02T13:10," +
                         "2023-01-02T13:20,\n]",
@@ -127,7 +127,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
             throw new RuntimeException(e);
         }
 
-        taskManager.readFromFile();
+        taskManager.readFromSource();
 
         assertEquals("[1,Test save,NEW,Test save description,0,null,null,\n]",
                 taskManager.getEpicList().toString(), "Неверное чтение эпиков из файла.");
@@ -160,7 +160,7 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
             throw new RuntimeException(e);
         }
 
-        taskManager.readFromFile();
+        taskManager.readFromSource();
 
         assertEquals("[]",
                 taskManager.getTaskList().toString(), "Неверное чтение тасков из файла.");

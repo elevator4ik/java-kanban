@@ -4,6 +4,8 @@ package manager;
 import KV.KVClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import modul.LocalDateTypeAdapter;
@@ -12,6 +14,7 @@ import modul.Task;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -20,7 +23,7 @@ import java.util.stream.Collectors;
 public class HttpTaskManager extends FileBackedTasksManager {
 
     private final Gson gson;
-    private final HttpServer httpServer;
+    final HttpServer httpServer;
     private final KVClient kvClient = new KVClient();
     private int key = 0;
 
@@ -49,32 +52,39 @@ public class HttpTaskManager extends FileBackedTasksManager {
         String param = h.getRequestURI().getRawQuery();//получаем параметры запроса
 
         try {
+            String value;
             if (chekForKey(h, param)) {
                 h.close();
                 return;
             }
             if (method.equals("GET")) {
-                StringBuilder history = new StringBuilder();
-                List<Task> historyMan = getHistory();
+                loadFromServer(key);
 
-                for (Task thisTask : historyMan) {
-                    int thisId = thisTask.getTaskId();
-                    history.append(thisId).append(",");
+                if (getTaskList().isEmpty() & getEpicList().isEmpty() & getSubTaskList().isEmpty()) {
+                    value = "blank";
+                } else {
+                    String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";
+                    StringBuilder task = new StringBuilder();
+                    StringBuilder epic = new StringBuilder();
+                    StringBuilder subTask = new StringBuilder();
+                    StringBuilder history = new StringBuilder();
+                    List<Task> historyMan = historyManager.getHistory();
+
+                    for (Task thisTask : historyMan) {
+
+                        int thisId = thisTask.getTaskId();
+                        history.append(thisId).append(",");
+                    }
+                    writingToBuilders(task, epic, subTask);
+
+                    value = (header + task + epic + subTask+ " \n" + history + "\n");//удаляем [] и ", " после
+                    // каждой задачи из списков перед отправкой, чтобы получить однородную структуру ответа, как при записи
+                    // в файл, с которой потом можно работать.
                 }
-
-                String value = ("id,type,name,status,description,duration,startTime,endTime,epic\n" +
-                        getTaskList() +
-                        getEpicList() +
-                        getSubTaskList() +
-                        " \n" + history + "\n").replaceAll("[\\[\\]]", "")
-                        .replaceAll("\n, ", "\n");//удаляем [] и ", " после
-                // каждой задачи из списков перед отправкой, чтобы получить однородную структуру ответа, как при записи
-                // в файл, с которой потом можно работать.
                 String jsonTaskManager = gson.toJson(value);
-
                 h.sendResponseHeaders(200, 0);
                 h.getResponseBody().write(jsonTaskManager.getBytes());
-                System.out.println("Задачи успешно отправлены!");
+                System.out.println("/load Задачи успешно отправлены!");
 
             } else {
                 System.out.println("/load ждёт GET-запрос, а получил: " + method);
@@ -99,13 +109,15 @@ public class HttpTaskManager extends FileBackedTasksManager {
                 return;
             }
             if (method.equals("POST")) {
-                String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
+                String firstResult = new BufferedReader(new InputStreamReader(h.getRequestBody()))
                         .lines().collect(Collectors.joining("\n"));
+                JsonElement jsonElement = JsonParser.parseString(firstResult);
 
+                String result = jsonElement.getAsString();
                 loadingIncom(result);
                 saveOnServer(key);
 
-                String answer = "Задачи успешно отправлены!";
+                String answer = "/save Задачи успешно отправлены!";
                 h.sendResponseHeaders(200, 0);
                 h.getResponseBody();
                 System.out.println(answer);
@@ -126,12 +138,15 @@ public class HttpTaskManager extends FileBackedTasksManager {
 
     private boolean chekForKey(HttpExchange h, String param) throws IOException {
 
-        int newKey = -1;
+        int newKey;
         boolean result = true;
         if (param != null && param.contains("key=")) {
-            String keyFromRequest = param.substring(param.indexOf("key=") + 4);
+            String[] s = param.split("=");
+            String keyFromRequest = s[1];
             if (!keyFromRequest.isEmpty()) {
                 newKey = Integer.parseInt(keyFromRequest);//выцепляем key
+                key = newKey;
+
             } else {
                 System.out.println("key отсутствует в запросе.");
                 h.sendResponseHeaders(403, 0);
@@ -144,10 +159,7 @@ public class HttpTaskManager extends FileBackedTasksManager {
             h.getResponseBody();
             result = false;
         }
-        if (newKey != -1 & newKey != key) {
-            key = newKey;
-            loadFromServer(key);
-        }
+
         return !result;
     }
 
@@ -174,33 +186,51 @@ public class HttpTaskManager extends FileBackedTasksManager {
 
     private void loadFromServer(int key) {
         String keyForClient = String.valueOf(key);
-        String result = kvClient.load(keyForClient);
+        JsonElement jsonElement = JsonParser.parseString(kvClient.load(keyForClient));
+        String result = jsonElement.getAsString();
         loadingIncom(result);
     }
 
-    private void loadingIncom(String result) {
+    public void loadingIncom(String result) {
         historyManager.clear();//чистим все хранилища и счётчик перед записью информации с сервера
         taskList.clear();
         subTaskList.clear();
         epicList.clear();
         sortetTasks.clear();
         id = 0;
+        String value = result.replaceAll("\"", "");
 
-        int newId = 0;//чтобы записать id в менеджер
-        String[] splitFirst = result.split("\n");
+        if (value.equals("blank")) {
+            System.out.println("Ответ пуст");
+        } else {
+            int newId = 0;//чтобы записать id в менеджер
 
-        for (String i : splitFirst) {
-            String[] split = i.split(",");
-
-            if (!"id".equals(split[0])) {
-                if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
-                    int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
-                    if (findedId > newId) {
-                        newId = findedId;
+            try (BufferedReader br = new BufferedReader(new StringReader(value))) {
+                while (br.ready()) {
+                    String line = br.readLine();
+                    if(line == null) {
+                        br.close();
+                        break;
                     }
-                    writingToLists(split);
+                    String[] splitFirst = line.split("\n");
+
+                    for (String i : splitFirst) {
+                        String[] split = i.split(",");
+
+                        if (!"id".equals(split[0])) {
+                            if (!" ".equals(split[0]) && !"".equals(split[0])) {//триггер на разделитель между тасками и историей
+                                int findedId = Integer.parseInt(split[0]);//сравниваем id и пишем больший
+                                if (findedId > newId) {
+                                    newId = findedId;
+                                }
+                                writingToLists(split);
+                            }
+                            idFromFile(newId);//пишем id в менеджер
+                        }
+                    }
                 }
-                idFromFile(newId);//пишем id в менеджер
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
     }

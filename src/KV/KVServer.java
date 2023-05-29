@@ -1,4 +1,5 @@
 package KV;
+
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
@@ -43,13 +44,18 @@ public class KVServer {
                     return;
                 }
                 String value = data.get(key);
+                byte[] resp;
+                if (value == null || value.isEmpty()) {
+                    resp = ("blank").getBytes(UTF_8);
+                } else {
+                    resp = value.getBytes(UTF_8);
+                }
 
-                byte[] resp = value.getBytes(UTF_8);
                 h.getResponseHeaders().add("Content-Type", "application/json");
                 h.sendResponseHeaders(200, resp.length);
                 h.getResponseBody().write(resp);
-
                 System.out.println("Значение ключа " + key + " успешно отправлено!");
+
             } else {
                 System.out.println("/load ждёт GET-запрос, а получил: " + h.getRequestMethod());
                 h.sendResponseHeaders(405, 0);

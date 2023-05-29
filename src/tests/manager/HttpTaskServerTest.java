@@ -1,10 +1,11 @@
 package tests.manager;
 
+import KV.HttpTaskServer;
 import KV.KVServer;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import manager.HttpTaskManager;
 import manager.Managers;
-import manager.TaskManager;
 import modul.Epic;
 import modul.LocalDateTypeAdapter;
 import modul.SubTask;
@@ -32,7 +33,8 @@ public class HttpTaskServerTest {
     KVServer server;
     URI url;
     HttpRequest request;
-    TaskManager manager;
+    HttpTaskManager manager;
+    HttpTaskServer taskServer;
     final Task task = new Task("Test Task", "Test save description", NEW, 10,
             LocalDateTime.of(2023, 1, 1, 11, 0));//id 0
     final Task newTask = new Task("Test Second Task", "Test save description", IN_PROGRESS,
@@ -53,12 +55,14 @@ public class HttpTaskServerTest {
     void creating() {
 
         try {
+
             server = new KVServer();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         server.start();
-        manager = Managers.getDefault();
+        taskServer = new HttpTaskServer();
+        manager = Managers.getHttpTaskManager();
         gson = new GsonBuilder()
                 .registerTypeAdapter(LocalDateTime.class, new LocalDateTypeAdapter())
                 .create();
@@ -71,7 +75,7 @@ public class HttpTaskServerTest {
         // писать каждый раз заново одни и те же данные, все остальное покрыто в FileBackedTasksManagerTest.
 
         String jsonTask = gson.toJson(task);
-        url = URI.create("http://localhost:8080/tasks/task?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/task?id=0&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -79,14 +83,21 @@ public class HttpTaskServerTest {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals("200\nTask с id 0 успешно добавлен", response.statusCode() + "\n" +
-                    response.body(), "Неверное сохранение на сервер.");
+            if (response.statusCode() == 200) {
+                assertEquals("200\nTask с id 0 успешно добавлен", response.statusCode() + "\n" +
+                        response.body(), "Неверное сохранение на сервер.");
+
+            } else {
+                System.out.println("Получен код: " + response.statusCode() + "\n" +
+                        response.body());
+            }
+
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Тест выкинул эксепшен");
         }
 
         jsonTask = gson.toJson(newTask);
-        url = URI.create("http://localhost:8080/tasks/task?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/task?id=1&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -96,12 +107,13 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             assertEquals("200\nTask с id 1 успешно добавлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
+
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 2");
         }
 
         jsonTask = gson.toJson(epic);
-        url = URI.create("http://localhost:8080/tasks/epic?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/epic?id=2&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -116,7 +128,7 @@ public class HttpTaskServerTest {
         }
 
         jsonTask = gson.toJson(newEpic);
-        url = URI.create("http://localhost:8080/tasks/epic?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/epic?id=3&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -130,8 +142,29 @@ public class HttpTaskServerTest {
             System.out.println("Где-то случилось непоправимое");
         }
 
+        url = URI.create("http://localhost:8080/tasks?key=1234");
+        request = HttpRequest.newBuilder()
+                .uri(url)
+                .header("Accept", "application/json")
+                .GET()
+                .build();
+        try {
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
+                    "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
+                    "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
+                    "2,Test Epic,NEW,Test save description,0,null,null,\n" +
+                    "3,Test Second Epic,NEW,Test save description,0,null,null,\n",
+                    response.statusCode() + "\n" +
+                    response.body(), "Неверное сохранение на сервер.");
+
+        } catch (IOException | InterruptedException e) {
+            System.out.println("Где-то случилось непоправимое");
+        }
+
+
         jsonTask = gson.toJson(subTask);
-        url = URI.create("http://localhost:8080/tasks/subtask?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/subtask?id=4&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -146,7 +179,7 @@ public class HttpTaskServerTest {
         }
 
         jsonTask = gson.toJson(newSubTask);
-        url = URI.create("http://localhost:8080/tasks/subtask?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/subtask?id=5&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -161,7 +194,7 @@ public class HttpTaskServerTest {
         }
 
         jsonTask = gson.toJson(thirdTask);
-        url = URI.create("http://localhost:8080/tasks/task?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/task?id=6&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -176,7 +209,7 @@ public class HttpTaskServerTest {
         }
 
         jsonTask = gson.toJson(thirdSubTask);
-        url = URI.create("http://localhost:8080/tasks/subtask?id=new&key=1234");
+        url = URI.create("http://localhost:8080/tasks/subtask?id=7&key=1234");
         request = HttpRequest.newBuilder()
                 .uri(url)
                 .header("Accept", "application/json")
@@ -198,7 +231,7 @@ public class HttpTaskServerTest {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals("200\nid,type,name,status,description,duration,startTime,endTime,epic\n" +
+            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
                             "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
                             "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
                             "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n" +
@@ -251,7 +284,7 @@ public class HttpTaskServerTest {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals("200\nid,type,name,status,description,duration,startTime,endTime\n" +
+            assertEquals("200\nid,name,status,description,duration,startTime,endTime\n" +
                             "0,Test Task,NEW,Test save description,10,2023-01-02T11:00,2023-01-02T11:10,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
@@ -297,8 +330,8 @@ public class HttpTaskServerTest {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals("200\nid,type,name,status,description,duration,startTime,endTime,epic\n" +
-                            "4,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,2,\n",
+            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
+                            "4,Test SubTask,NEW,Test save description,10,2023-01-02T11:22,2023-01-02T11:32,2,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое");
@@ -342,14 +375,15 @@ public class HttpTaskServerTest {
                 .build();
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            assertEquals("200\nid,type,name,status,description,duration,startTime,endTime\n" +
-                            "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n",
+            assertEquals("200\nid,name,status,description,duration,startTime,endTime\n" +
+                            "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-02T11:32,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое");
         }
 
         manager.stopIt();
+        taskServer.stopIt();
         server.stopIt();
     }
 

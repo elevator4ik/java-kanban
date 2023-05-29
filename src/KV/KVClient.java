@@ -1,24 +1,32 @@
 package KV;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import modul.LocalDateTypeAdapter;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.LocalDateTime;
 
 public class KVClient {
 
     private final String apiToken;
     private final HttpClient client;
     private final URI url;
+    Gson gson;
 
     public KVClient() {
 
         url = URI.create("http://localhost:8078");
         client = HttpClient.newHttpClient();
         apiToken = registerOnServer();
-
+        gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTypeAdapter())
+                .create();
     }
 
     public void save(int key, String json) {
@@ -47,11 +55,13 @@ public class KVClient {
                 .uri(URI.create(url + "/load/" + key + "?API_TOKEN=" + apiToken))
                 .header("Accept", "application/json")
                 .build();
-
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
-                return response.body();
+
+                String value = response.body();
+                String json = gson.toJson(value);
+                return value;
             } else {
                 System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
                 return null;
