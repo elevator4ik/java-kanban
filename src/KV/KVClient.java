@@ -29,7 +29,7 @@ public class KVClient {
                 .create();
     }
 
-    public void save(int key, String json) {
+    public void save(String key, String json) {
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
@@ -60,7 +60,6 @@ public class KVClient {
             if (response.statusCode() == 200) {
 
                 String value = response.body();
-                String json = gson.toJson(value);
                 return value;
             } else {
                 System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());

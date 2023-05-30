@@ -295,7 +295,7 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public void idFromFile(int newId) {//читаем из файла id и делаем на 1 больше
+    public void idFromSource(int newId) {//читаем из файла id и делаем на 1 больше
         id = newId + 1;
     }
 

@@ -297,7 +297,7 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
                     }
                 }
             }
-            super.idFromFile(newId);//пишем id в менеджер
+            idFromSource(newId);//пишем id в менеджер
         }
     }
 
@@ -359,5 +359,9 @@ public class FileBackedTasksManager extends InMemoryTaskManager {
 
             historyManager.add(subTaskList.get(j));
         }
+    }
+    @Override
+    public void idFromSource(int id){
+        super.idFromSource(id);
     }
 }

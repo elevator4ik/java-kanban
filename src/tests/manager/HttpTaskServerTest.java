@@ -86,10 +86,6 @@ public class HttpTaskServerTest {
             if (response.statusCode() == 200) {
                 assertEquals("200\nTask с id 0 успешно добавлен", response.statusCode() + "\n" +
                         response.body(), "Неверное сохранение на сервер.");
-
-            } else {
-                System.out.println("Получен код: " + response.statusCode() + "\n" +
-                        response.body());
             }
 
         } catch (IOException | InterruptedException e) {
@@ -124,7 +120,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nEpic с id 2 успешно добавлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 3");
         }
 
         jsonTask = gson.toJson(newEpic);
@@ -139,7 +135,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nEpic с id 3 успешно добавлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 4");
         }
 
         url = URI.create("http://localhost:8080/tasks?key=1234");
@@ -159,7 +155,7 @@ public class HttpTaskServerTest {
                     response.body(), "Неверное сохранение на сервер.");
 
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 5");
         }
 
 
@@ -175,7 +171,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nSubTask с id 4 успешно добавлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 6");
         }
 
         jsonTask = gson.toJson(newSubTask);
@@ -190,7 +186,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nSubTask с id 5 успешно добавлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 7");
         }
 
         jsonTask = gson.toJson(thirdTask);
@@ -205,7 +201,7 @@ public class HttpTaskServerTest {
             assertEquals("402\nЗадача пересекается с одной из существующих.", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 8");
         }
 
         jsonTask = gson.toJson(thirdSubTask);
@@ -220,7 +216,7 @@ public class HttpTaskServerTest {
             assertEquals("402\nЗадача пересекается с одной из существующих.", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 9");
         }
 
         url = URI.create("http://localhost:8080/tasks?key=1234");
@@ -241,7 +237,7 @@ public class HttpTaskServerTest {
                     response.statusCode() + "\n" +
                             response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 10");
         }
 
         final Task taskUpdate = new Task("Test Task", "Test save description", NEW, 10,
@@ -258,7 +254,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nTask с id 0 успешно обновлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 11");
         }
 
         url = URI.create("http://localhost:8080/tasks/task?id=1&key=1234");
@@ -273,7 +269,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nTask с id 1 успешно удален", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 12");
         }
 
         url = URI.create("http://localhost:8080/tasks/task?id=0&key=1234");
@@ -288,7 +284,7 @@ public class HttpTaskServerTest {
                             "0,Test Task,NEW,Test save description,10,2023-01-02T11:00,2023-01-02T11:10,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 13");
         }
 
         final SubTask subTask = new SubTask("Test SubTask", "Test save description", NEW, 10,
@@ -305,7 +301,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nSubTask с id 4 успешно обновлен", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 14");
         }
 
         url = URI.create("http://localhost:8080/tasks/subtask?id=5&key=1234");
@@ -319,7 +315,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nSubTask с id 5 успешно удален", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 15");
         }
 
         url = URI.create("http://localhost:8080/tasks/subtask?id=4&key=1234");
@@ -334,7 +330,7 @@ public class HttpTaskServerTest {
                             "4,Test SubTask,NEW,Test save description,10,2023-01-02T11:22,2023-01-02T11:32,2,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 16");
         }
 
         final Epic epic = new Epic("Test Epic", "Test save description", NEW);//id2
@@ -350,7 +346,7 @@ public class HttpTaskServerTest {
             assertEquals("402\nEpic с id 2 уже существует", response.statusCode() + "\n" +
                     response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 17");
         }
 
         url = URI.create("http://localhost:8080/tasks/epic?id=3&key=1234");
@@ -364,7 +360,7 @@ public class HttpTaskServerTest {
             assertEquals("200\nEpic с id 3 и все его subTask'и успешно удалены", response.statusCode() +
                     "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 18");
         }
 
         url = URI.create("http://localhost:8080/tasks/epic?id=2&key=1234");
@@ -379,10 +375,9 @@ public class HttpTaskServerTest {
                             "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-02T11:32,\n",
                     response.statusCode() + "\n" + response.body(), "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
-            System.out.println("Где-то случилось непоправимое");
+            System.out.println("Где-то случилось непоправимое 19");
         }
 
-        manager.stopIt();
         taskServer.stopIt();
         server.stopIt();
     }
