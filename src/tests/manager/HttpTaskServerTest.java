@@ -159,13 +159,12 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JsonElement json = JsonParser.parseString(response.body());
             String responseString = gson.fromJson(json, String.class);
-            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
-                    "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
-                    "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
-                    "2,Test Epic,NEW,Test save description,0,null,null,\n" +
-                    "3,Test Second Epic,NEW,Test save description,0,null,null,\n",
-                    response.statusCode() + "\n" +
-                            responseString, "Неверное сохранение на сервер.");
+            assertEquals("200\ntasks\n" +
+                            "[0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
+                            ", 1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11," +
+                            "2023-01-01T11:21,\n]epics\n[2,Test Epic,NEW,Test save description,0,null,null,\n" +
+                            ", 3,Test Second Epic,NEW,Test save description,0,null,null,\n]subtasks\n[]",
+                    response.statusCode() + "\n" + responseString, "Неверное сохранение на сервер.");
 
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое 5");
@@ -250,14 +249,15 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JsonElement json = JsonParser.parseString(response.body());
             String responseString = gson.fromJson(json, String.class);
-            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
-                            "0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
-                            "1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
-                            "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n" +
-                            "3,Test Second Epic,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,\n" +
-                            "4,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,2,\n" +
-                            "5,Test Second SubTask,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,3,\n",
-                    response.statusCode() + "\n" + responseString, "Неверное сохранение на сервер.");
+            assertEquals("200\ntasks\n" +
+                            "[0,Test Task,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,\n" +
+                            ", 1,Test Second Task,IN_PROGRESS,Test save description,10,2023-01-01T11:11,2023-01-01T11:21,\n" +
+                            "]epics\n[2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,\n" +
+                            ", 3,Test Second Epic,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,\n" +
+                            "]subtasks\n[4,Test SubTask,NEW,Test save description,10,2023-01-01T11:22,2023-01-01T11:32,2,\n" +
+                            ", 5,Test Second SubTask,NEW,Test save description,10,2023-01-01T11:33,2023-01-01T11:43,3,\n" +
+                            "]",response.statusCode() + "\n" + responseString,
+                    "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
             System.out.println("Где-то случилось непоправимое 10");
         }
@@ -308,7 +308,7 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JsonElement json = JsonParser.parseString(response.body());
             String responseString = gson.fromJson(json, String.class);
-            assertEquals("200\nid,name,status,description,duration,startTime,endTime\n" +
+            assertEquals("200\n" +
                             "0,Test Task,NEW,Test save description,10,2023-01-02T11:00,2023-01-02T11:10,\n",
                     response.statusCode() + "\n" + responseString, "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
@@ -360,7 +360,7 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JsonElement json = JsonParser.parseString(response.body());
             String responseString = gson.fromJson(json, String.class);
-            assertEquals("200\nid,name,status,description,duration,startTime,endTime,epic\n" +
+            assertEquals("200\n" +
                             "4,Test SubTask,NEW,Test save description,10,2023-01-02T11:22,2023-01-02T11:32,2,\n",
                     response.statusCode() + "\n" + responseString, "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {
@@ -411,7 +411,7 @@ public class HttpTaskServerTest {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             JsonElement json = JsonParser.parseString(response.body());
             String responseString = gson.fromJson(json, String.class);
-            assertEquals("200\nid,name,status,description,duration,startTime,endTime\n" +
+            assertEquals("200\n" +
                             "2,Test Epic,NEW,Test save description,10,2023-01-01T11:22,2023-01-02T11:32,\n",
                     response.statusCode() + "\n" + responseString, "Неверное сохранение на сервер.");
         } catch (IOException | InterruptedException e) {

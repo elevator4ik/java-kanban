@@ -78,13 +78,9 @@ public class HttpTaskServer {
             }
             if (method.equals("GET")) {
                 manager.idFromSource(Integer.parseInt(key));
-                String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
-                        manager.getTaskList() +
-                        manager.getEpicList() +
-                        manager.getSubTaskList()).replaceAll("[\\[\\]]", "")
-                        .replaceAll("\n, ", "\n");//тут и далее: удаляем [] и ", " после каждой задачи
-                // из листов перед отправкой, чтобы получить однородную структуру ответа, как при записи в файл, с которой
-                // потом можно работать.
+                String value = ("tasks\n"+manager.getTaskList() + "epics\n" + manager.getEpicList() + "subtasks\n" +
+                        manager.getSubTaskList());
+
                 sendingResp(h, value);
                 System.out.println("Задачи успешно отправлены!");
 
@@ -130,8 +126,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("task")) {
-                        String value = ("id,name,status,description,duration,startTime,endTime\n" +
-                                manager.getTaskById(id)).replaceAll("[\\[\\]]", "");
+                        String value = String.valueOf(manager.getTaskById(id));
                         sendingResp(h, value);
                         System.out.println("task успешно отправлен!");
                     } else {
@@ -231,8 +226,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("epic")) {
-                        String value = ("id,name,status,description,duration,startTime,endTime\n" +
-                                manager.getEpicById(id)).replaceAll("[\\[\\]]", "");
+                        String value = String.valueOf(manager.getEpicById(id));
                         sendingResp(h, value);
                         System.out.println("epic успешно отправлен!");
                     } else {
@@ -329,8 +323,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("subtask")) {
-                        String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
-                                manager.getSubTaskById(id)).replaceAll("[\\[\\]]", "");
+                        String value = String.valueOf(manager.getSubTaskById(id));
 
                         sendingResp(h, value);
                         System.out.println("subTask успешно отправлен!");
@@ -435,9 +428,8 @@ public class HttpTaskServer {
 
             if (method.equals("GET")) {
                 manager.idFromSource(Integer.parseInt(key));
-                String value = ("id,name,status,description,duration,startTime,endTime,epic\n" +
-                        manager.getHistory()).replaceAll("[\\[\\]]", "")
-                        .replaceAll("\n, ", "\n");
+
+                String value = manager.getHistory().toString();
 
                 sendingResp(h, value);
                 System.out.println("История успешно отправлена!");
