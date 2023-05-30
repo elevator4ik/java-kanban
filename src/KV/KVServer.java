@@ -1,10 +1,14 @@
 package KV;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
+import modul.LocalDateTypeAdapter;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +19,7 @@ public class KVServer {
     private final String apiToken;
     private final HttpServer server;
     private final Map<String, String> data = new HashMap<>();
+    Gson gson;
 
     public KVServer() throws IOException {
         apiToken = generateApiToken();
@@ -22,6 +27,9 @@ public class KVServer {
         server.createContext("/register", this::register);
         server.createContext("/save", this::save);
         server.createContext("/load", this::load);
+        gson = new GsonBuilder()
+                .registerTypeAdapter(LocalDateTime.class, new LocalDateTypeAdapter())
+                .create();//применяем LDT адаптер
     }
 
     public void stopIt() {
@@ -46,7 +54,7 @@ public class KVServer {
                 String value = data.get(key);
                 byte[] resp;
                 if (value == null || value.isEmpty()) {
-                    resp = ("blank").getBytes(UTF_8);
+                    resp = (gson.toJson("blank")).getBytes(UTF_8);
                 } else {
                     resp = value.getBytes(UTF_8);
                 }
@@ -87,7 +95,11 @@ public class KVServer {
                     h.sendResponseHeaders(400, 0);
                     return;
                 }
-                data.put(key, value);
+                if (data.containsKey(key)) {
+                    data.replace(key, value);
+                } else {
+                    data.put(key, value);
+                }
                 System.out.println("Значение для ключа " + key + " успешно обновлено!");
                 h.sendResponseHeaders(200, 0);
             } else {

@@ -29,7 +29,7 @@ public class KVClient {
                 .create();
     }
 
-    public void save(String key, String json) {
+    public void save(String key, String json) {//отправляем на KVServer json из HttpTaskManager
         HttpRequest request = HttpRequest.newBuilder()
                 .POST(HttpRequest.BodyPublishers.ofString(json))
                 .uri(URI.create(url + "/save/" + key + "?API_TOKEN=" + apiToken))
@@ -48,7 +48,7 @@ public class KVClient {
         }
     }
 
-    public String load(String key) {
+    public String load(String key) {//получаем от KVServer json по ключу, ранее полученный из HttpTaskManager
 
         HttpRequest request = HttpRequest.newBuilder()
                 .GET()
@@ -59,8 +59,7 @@ public class KVClient {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
 
-                String value = response.body();
-                return value;
+                return response.body();
             } else {
                 System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
                 return null;

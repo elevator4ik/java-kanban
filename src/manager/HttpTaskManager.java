@@ -4,6 +4,8 @@ package manager;
 import KV.KVClient;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import modul.LocalDateTypeAdapter;
 import modul.ManagerSaveException;
 import modul.Task;
@@ -28,14 +30,15 @@ public class HttpTaskManager extends FileBackedTasksManager {
     }
 
     @Override
-    public void idFromSource(int keyFromTaskServer) {// idFromSource() у родителя принимает int, поэтому и передаем int
-        key = String.valueOf(keyFromTaskServer);
+    public void idFromSource(int keyFromSource) {// idFromSource() у родителя принимает int, поэтому и передаем int
+        key = String.valueOf(keyFromSource);
     }
 
     @Override
-    public void readFromSource() {
+    public void readFromSource() {//
+        JsonElement json = JsonParser.parseString(kvClient.load(key));
+        String response = gson.fromJson(json, String.class);
 
-        String response = kvClient.load(key);
         if (!response.equals("blank")) {
             try (BufferedReader br = new BufferedReader(new StringReader(response))) {
                 if (br.readLine() == null) {
