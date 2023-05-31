@@ -94,9 +94,10 @@ public class FileBackedTasksManagerTest extends TaskManagerTest {
                 taskManager.getSubTaskList().toString(), "Неверное чтение сабтасков из файла.");
         assertEquals("[1,Test save,NEW,Test save description,10,2023-01-01T11:10,2023-01-01T11:10,\n]",
                 taskManager.getHistory().toString(), "Неверное чтение истории из файла.");
-        assertEquals("2,Test save,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,1,\n\n" +
-                        "0,Test updateTask,IN_PROGRESS,Test updateTask new description,10,2023-01-02T13:10,2023-01-02T13:20,\n\n",
-                taskManager.getPrioritizedTasks(), "Неверное чтение упорядоченного списка из файла.");
+        assertEquals("[2,Test save,NEW,Test save description,10,2023-01-01T11:00,2023-01-01T11:10,1,\n" +
+                        ", 0,Test updateTask,IN_PROGRESS,Test updateTask new description,10,2023-01-02T13:10,2023-01-02T13:20,\n" +
+                        "]",
+                taskManager.getPrioritizedTasks().toString(), "Неверное чтение упорядоченного списка из файла.");
     }
 
     @Test
