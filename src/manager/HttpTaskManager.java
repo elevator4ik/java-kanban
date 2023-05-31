@@ -2,19 +2,18 @@ package manager;
 
 
 import KV.KVClient;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import modul.Epic;
 import modul.LocalDateTypeAdapter;
-import modul.ManagerSaveException;
+import modul.SubTask;
 import modul.Task;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.StringReader;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 public class HttpTaskManager extends FileBackedTasksManager {
     private final Gson gson;
@@ -35,69 +34,71 @@ public class HttpTaskManager extends FileBackedTasksManager {
     }
 
     @Override
-    public void readFromSource() {//
+    public void readFromSource() {
+
         JsonElement json = JsonParser.parseString(kvClient.load(key));
-        String response = gson.fromJson(json, String.class);
 
-        if (!response.equals("blank")) {
-            try (BufferedReader br = new BufferedReader(new StringReader(response))) {
-                if (br.readLine() == null) {
-                    System.out.println("Данные не вернулись");
-                } else {
-                    readingFromServer(br);
-                }
-            } catch (IOException e) {
-                throw new ManagerSaveException();
-            }
-        }
-    }
+        if (!json.toString().equals("\"blank\"")) {
 
-    private void readingFromServer(BufferedReader br) throws IOException {
-        int newId = 0;//чтобы записать id в менеджер
-        while (br.ready()) {
-            String line = br.readLine();
-            if (!(line == null)) {
-                String[] split = line.split("\n");
-                if (!"id".equals(split[0])) {
+            JsonObject jsonObject = json.getAsJsonObject();
+            ArrayList<Task> tasks = gson.fromJson(jsonObject.get("tasks"), new TypeToken<ArrayList<Task>>() {
+            }.getType());
+            ArrayList<Epic> epics = gson.fromJson(jsonObject.get("epics"), new TypeToken<ArrayList<Epic>>() {
+            }.getType());
+            ArrayList<SubTask> subtasks = gson.fromJson(jsonObject.get("subtasks"), new TypeToken<ArrayList<SubTask>>() {
+            }.getType());
+            ArrayList<Integer> history = gson.fromJson(jsonObject.get("history"), new TypeToken<ArrayList<Integer>>() {
+            }.getType());
 
-                    for (String value : split) {
-                        String[] split1 = value.split(",");
-
-                        if (!" ".equals(split1[0]) && !"".equals(split1[0])) {//триггер на разделитель между тасками и историей
-
-                            int findedId = Integer.parseInt(split1[0]);//сравниваем id и пишем больший
-                            if (findedId > newId) {
-                                newId = findedId;
-                            }
-
-                            writingToLists(split1);
-                        }
+            if (!tasks.isEmpty()) {
+                for (Task task : tasks) {
+                    taskList.put(task.getTaskId(), task);
+                    if (task.getTaskId() >= id) {
+                        super.idFromSource(task.getTaskId());
                     }
                 }
-            } else {
-                break;
             }
-            idFromSource(newId);//пишем id в менеджер
+            if (!epics.isEmpty()) {
+                for (Epic task : epics) {
+                    epicList.put(task.getTaskId(), task);
+                    if (task.getTaskId() >= id) {
+                        super.idFromSource(task.getTaskId());
+                    }
+                }
+            }
+            if (!subtasks.isEmpty()) {
+                for (SubTask task : subtasks) {
+                    subTaskList.put(task.getTaskId(), task);
+                    if (task.getTaskId() >= id) {
+                        super.idFromSource(task.getTaskId());
+                    }
+                }
+            }
+            if (!history.isEmpty()) {
+                for (int i : history) {
+                    if (taskList.containsKey(i)) {
+                        historyManager.add(taskList.get(i));
+                    } else if (epicList.containsKey(i)) {
+                        historyManager.add(epicList.get(i));
+                    } else if (subTaskList.containsKey(i)) {
+                        historyManager.add(subTaskList.get(i));
+                    }
+                }
+            }
         }
     }
 
     @Override
     public void save() {
-        String header = "id,type,name,status,description,duration,startTime,endTime,epic\n";
-        StringBuilder task = new StringBuilder();
-        StringBuilder epic = new StringBuilder();
-        StringBuilder subTask = new StringBuilder();
-        StringBuilder history = new StringBuilder();
-        List<Task> historyMan = historyManager.getHistory();
 
-        for (Task thisTask : historyMan) {//идем по истории и сразу пишем ее в билдер
+        HashMap<String, Collection> toJson = new HashMap<>();
+        toJson.put("tasks", taskList.values());
+        toJson.put("subtasks", subTaskList.values());
+        toJson.put("epics", epicList.values());
+        toJson.put("history", historyManager.getHistory().stream().map(Task::getTaskId).
+                collect(Collectors.toList()));
 
-            int thisId = thisTask.getTaskId();
-            history.append(thisId).append(",");
-        }
-        writingToBuilders(task, epic, subTask);
-        String allInString = header + task + epic + subTask + " \n" + history + "\n";
-        String jsonTaskManager = gson.toJson(allInString);
-        kvClient.save(key, jsonTaskManager);
+        String json = gson.toJson(toJson);
+        kvClient.save(key, json);
     }
 }

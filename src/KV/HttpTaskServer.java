@@ -18,6 +18,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.InetSocketAddress;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -78,8 +79,7 @@ public class HttpTaskServer {
             }
             if (method.equals("GET")) {
                 manager.idFromSource(Integer.parseInt(key));
-                String value = ("tasks\n"+manager.getTaskList() + "epics\n" + manager.getEpicList() + "subtasks\n" +
-                        manager.getSubTaskList());
+                String value = gson.toJson(manager.getPrioritizedTasks());
 
                 sendingResp(h, value);
                 System.out.println("Задачи успешно отправлены!");
@@ -126,7 +126,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("task")) {
-                        String value = String.valueOf(manager.getTaskById(id));
+                        String value = gson.toJson(manager.getTaskById(id));
                         sendingResp(h, value);
                         System.out.println("task успешно отправлен!");
                     } else {
@@ -147,7 +147,7 @@ public class HttpTaskServer {
                         task.setTaskId(id);
                         manager.updateTask(task);
 
-                        String value = "Task с id " + id + " успешно обновлен";
+                        String value = gson.toJson("Task с id " + id + " успешно обновлен");
                         sendingResp(h, value);
                         System.out.println(value);
                     } else if (checkForType(h).equals("task")) {
@@ -163,7 +163,7 @@ public class HttpTaskServer {
                             break;
                         }
                         int newId = manager.getLastId() - 1;
-                        String value = "Task с id " + newId + " успешно добавлен";
+                        String value = gson.toJson("Task с id " + newId + " успешно добавлен");
                         sendingResp(h, value);
                         System.out.println(value);
                     } else {
@@ -176,7 +176,7 @@ public class HttpTaskServer {
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("task")) {
                         manager.deleteTaskById(id);
-                        String value = "Task с id " + id + " успешно удален";
+                        String value = gson.toJson("Task с id " + id + " успешно удален");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -226,7 +226,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("epic")) {
-                        String value = String.valueOf(manager.getEpicById(id));
+                        String value = gson.toJson(manager.getEpicById(id));
                         sendingResp(h, value);
                         System.out.println("epic успешно отправлен!");
                     } else {
@@ -243,22 +243,21 @@ public class HttpTaskServer {
                     Epic task = gson.fromJson(jsonElement, Epic.class);
                     if (checkForContains(h, id).equals("epic")) {
 
-                        String value = "Epic с id " + id + " уже существует";
-                        String json = gson.toJson(value);
+                        String value = gson.toJson("Epic с id " + id + " уже существует");
                         h.sendResponseHeaders(402, 0);
-                        h.getResponseBody().write(json.getBytes());
+                        h.getResponseBody().write(value.getBytes());
                         System.out.println(value);
                     } else if (checkForType(h).equals("epic")) {
                         int listSize = manager.getEpicList().size();
                         manager.addEpic(task);
                         if (manager.getEpicList().size() == listSize) {
-                            String value = "Задача пересекается с одной из существующих.";
+                            String value = gson.toJson("Задача пересекается с одной из существующих.");
                             sendingResp(h, value);
                             System.out.println(value);
                             break;
                         }
                         int newId = manager.getLastId() - 1;
-                        String value = "Epic с id " + newId + " успешно добавлен";
+                        String value = gson.toJson("Epic с id " + newId + " успешно добавлен");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -272,7 +271,7 @@ public class HttpTaskServer {
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("epic")) {
                         manager.deleteEpicById(id);
-                        String value = "Epic с id " + id + " и все его subTask'и успешно удалены";
+                        String value = gson.toJson("Epic с id " + id + " и все его subTask'и успешно удалены");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -323,7 +322,7 @@ public class HttpTaskServer {
                 case "GET":
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("subtask")) {
-                        String value = String.valueOf(manager.getSubTaskById(id));
+                        String value = gson.toJson(manager.getSubTaskById(id));
 
                         sendingResp(h, value);
                         System.out.println("subTask успешно отправлен!");
@@ -335,8 +334,7 @@ public class HttpTaskServer {
                     break;
                 case "POST":
                     manager.idFromSource(Integer.parseInt(key));
-                    String result = new BufferedReader(new InputStreamReader(h.getRequestBody()))
-                            .lines().collect(Collectors.joining("\n"));
+                    String result = new String(h.getRequestBody().readAllBytes(), StandardCharsets.UTF_8);
                     JsonElement jsonElement = JsonParser.parseString(result);
 
                     SubTask task = gson.fromJson(jsonElement, SubTask.class);
@@ -345,7 +343,7 @@ public class HttpTaskServer {
                         task.setTaskId(id);
                         manager.updateSubTask(task);
 
-                        String value = "SubTask с id " + id + " успешно обновлен";
+                        String value = gson.toJson("SubTask с id " + id + " успешно обновлен");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -363,7 +361,7 @@ public class HttpTaskServer {
                             break;
                         }
                         int newId = manager.getLastId() - 1;
-                        String value = "SubTask с id " + newId + " успешно добавлен";
+                        String value = gson.toJson("SubTask с id " + newId + " успешно добавлен");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -378,7 +376,7 @@ public class HttpTaskServer {
                     manager.idFromSource(Integer.parseInt(key));
                     if (checkForContains(h, id).equals("subtask")) {
                         manager.deleteSubTaskById(id);
-                        String value = "SubTask с id " + id + " успешно удален";
+                        String value = gson.toJson("SubTask с id " + id + " успешно удален");
 
                         sendingResp(h, value);
                         System.out.println(value);
@@ -429,7 +427,7 @@ public class HttpTaskServer {
             if (method.equals("GET")) {
                 manager.idFromSource(Integer.parseInt(key));
 
-                String value = manager.getHistory().toString();
+                String value = gson.toJson(manager.getHistory());
 
                 sendingResp(h, value);
                 System.out.println("История успешно отправлена!");
@@ -540,10 +538,9 @@ public class HttpTaskServer {
     }
 
     private void sendingResp(HttpExchange h, String value) {
-        String json = gson.toJson(value);
         try {
             h.sendResponseHeaders(200, 0);
-            h.getResponseBody().write(json.getBytes());
+            h.getResponseBody().write(value.getBytes());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

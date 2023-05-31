@@ -305,13 +305,8 @@ public class InMemoryTaskManager implements TaskManager {
     }
 
     @Override
-    public String getPrioritizedTasks() {//оставил его для вывода списком упорядоченных задач
-        StringBuilder s = new StringBuilder();
-        for (Task t : sortetTasks) {
-            s.append(t.toString())
-                    .append("\n");
-        }
-        return s.toString();
+    public Collection<Task>  getPrioritizedTasks() {//оставил его для вывода списком упорядоченных задач
+        return sortetTasks;
     }
 
     @Override

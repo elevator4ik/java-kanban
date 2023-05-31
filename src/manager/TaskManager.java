@@ -4,6 +4,7 @@ import modul.Epic;
 import modul.SubTask;
 import modul.Task;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface TaskManager {
@@ -52,7 +53,7 @@ public interface TaskManager {
 
     int getLastId();
 
-    String getPrioritizedTasks();
+    Collection<Task> getPrioritizedTasks();
 
     String printFile();
 
