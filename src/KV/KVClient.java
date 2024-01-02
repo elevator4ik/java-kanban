@@ -55,19 +55,7 @@ public class KVClient {
                 .uri(URI.create(url + "/load/" + key + "?API_TOKEN=" + apiToken))
                 .header("Accept", "application/json")
                 .build();
-        try {
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 200) {
-
-                return response.body();
-            } else {
-                System.out.println("Что-то пошло не так. Сервер вернул код состояния: " + response.statusCode());
-                return null;
-            }
-        } catch (IOException | InterruptedException e) {
-            System.out.println("Во время выполнения запроса возникла ошибка.");
-            return null;
-        }
+        return gettingResponse(request);
     }
 
     public String registerOnServer() {
@@ -77,6 +65,10 @@ public class KVClient {
                 .header("Accept", "application/json")
                 .GET()
                 .build();
+        return gettingResponse(request);
+    }
+
+    private String gettingResponse(HttpRequest request) {
         try {
             HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 

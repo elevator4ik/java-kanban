@@ -203,24 +203,11 @@ public class HttpTaskServer {
 
         String method = h.getRequestMethod();
         String param = h.getRequestURI().getRawQuery();//получаем параметры запроса
+        String key = "false";
+        int id = -1;
+
         try {
-            int id = -1;
-            String key = "false";
-            if (param != null && (param.contains("id=") & param.contains("&"))) {
-                key = chekForKey(h, param);
-                id = chekForId(h, param);
-            } else {
-                System.out.println("Некорректный запрос.");
-                h.sendResponseHeaders(405, 0);
-                h.getResponseBody();
-            }
-            if (key.equals("false") && id == -1) {
-                System.out.println("Некорректный запрос.");
-                h.sendResponseHeaders(405, 0);
-                h.getResponseBody();
-                h.close();
-                return;
-            }
+            chekForKeyAndId(param, key, id, h);
 
             switch (method) {
                 case "GET":
@@ -295,28 +282,36 @@ public class HttpTaskServer {
         }
     }
 
+    private void chekForKeyAndId(String param, String key, int id, HttpExchange h) {
+        try{
+        if (param != null && (param.contains("id=") & param.contains("&"))) {
+            key = chekForKey(h, param);
+            id = chekForId(h, param);
+        } else {
+            System.out.println("Некорректный запрос.");
+            h.sendResponseHeaders(405, 0);
+            h.getResponseBody();
+        }
+        if (key.equals("false") && id == -1) {
+            System.out.println("Некорректный запрос.");
+            h.sendResponseHeaders(405, 0);
+            h.getResponseBody();
+            h.close();
+        }
+    } catch (IOException e) {
+        throw new RuntimeException(e);
+    }
+}
+
     private void subTaskHandler(HttpExchange h) {
 
         String method = h.getRequestMethod();
         String param = h.getRequestURI().getRawQuery();//получаем параметры запроса
+        String key = "false";
+        int id = -1;
         try {
-            int id = -1;
-            String key = "false";
-            if (param != null && (param.contains("id=") & param.contains("&"))) {
-                key = chekForKey(h, param);
-                id = chekForId(h, param);
-            } else {
-                System.out.println("Некорректный запрос.");
-                h.sendResponseHeaders(405, 0);
-                h.getResponseBody();
-            }
-            if (key.equals("false") && id == -1) {
-                System.out.println("Некорректный запрос.");
-                h.sendResponseHeaders(405, 0);
-                h.getResponseBody();
-                h.close();
-                return;
-            }
+
+            chekForKeyAndId(param, key, id, h);
 
             switch (method) {
                 case "GET":

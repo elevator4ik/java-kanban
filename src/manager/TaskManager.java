@@ -57,7 +57,6 @@ public interface TaskManager {
 
     String printFile();
 
-    void readFromSource();//по условиям ТЗ 7 нужно было добавить этот метод, метод был переименован,
-    // чтобы не было привязки к файлу, а делать метод загрузки данных из файла статиком - черевато.
+    void readFromSource();
 
 }

@@ -3,7 +3,10 @@ package history;
 import modul.Node;
 import modul.Task;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class InMemoryHistoryManager implements HistoryManager {
 
@@ -73,17 +76,15 @@ class CustomLinkedList {
         Node<Task> read = this.head;//начинаем с головы, ибо точно знаем, что он первый в списке.
 
         if (this.head != null) {//проверяем, есть ли начало у списка, если нет - возвращаем null
-            if (this.head.next == null) {//если в списке только 1 нод, у него нет некста
-                history.add(read.data);
-            } else {
+            if (this.head.next != null) {//если в списке только 1 нод, у него нет некста
                 do {
                     history.add(read.data);
                     read = read.next;
                 }
                 while (read.next != null);
                 read = this.tail;
-                history.add(read.data);
             }
+            history.add(read.data);
         }
         return history;
     }
